@@ -6,7 +6,7 @@
 <title>AwareSoul — AwareMind Indonesia</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root{
@@ -184,6 +184,131 @@ body{scroll-behavior:smooth}
   .main{padding-top:72px}
   .resource-grid{grid-template-columns:1fr}
   .app.sidebar-collapsed .nav-label,.app.sidebar-collapsed .logo-copy,.app.sidebar-collapsed .side-card{opacity:1;transform:none;width:auto}
+}
+
+
+/* ===== MOBILE-FIRST V4 — POPPINS + SOLID COLOR ===== */
+:root{
+  --am:#65458f;--am-dark:#4f3473;--am-soft:#f1edf6;
+  --mint:#67a99f;--mint-soft:#eaf6f3;
+  --ink:#211d29;--muted:#746f7d;--line:#e9e5ed;--bg:#f8f7f9;
+  --danger:#d85a70;--danger-bg:#fff1f3;
+}
+html,body,button,input,textarea,select{font-family:'Poppins',sans-serif!important}
+body{background:var(--bg);color:var(--ink)}
+.auth-brand{background:var(--am-dark)!important}
+.auth-brand h1,.logo strong,.hero h3{font-family:'Poppins',sans-serif!important}
+.logo-mark,.primary,.progress>div,.grounding-num,.resource-icon{background:var(--am)!important;box-shadow:none!important}
+.primary:hover{background:var(--am-dark)!important}
+.soft{background:var(--am-soft)!important;color:var(--am-dark)!important}
+.hero{background:var(--am-dark)!important;box-shadow:0 12px 32px rgba(45,34,58,.08)!important}
+.hero:after{background:rgba(255,255,255,.06)!important}
+.c-photo{background:var(--am)!important}
+.sos-modal .modal-head,.modal-head{background:var(--am-dark)!important}
+.breathe-orb{background:var(--mint-soft)!important;box-shadow:0 16px 42px rgba(59,86,80,.12)!important}
+.resource-icon{color:#fff!important}
+.card,.counselor,.resource-card,.auth-box{box-shadow:0 8px 24px rgba(45,34,58,.055)!important}
+.mobile-bottom-nav,.mobile-sos-fab{display:none}
+.top h2{letter-spacing:-.02em}.hero h3{letter-spacing:-.035em}.metric b{letter-spacing:-.03em}
+
+@media(max-width:900px){
+  body{padding-bottom:96px;background:#f8f7f9}
+  .sidebar,.sidebar-toggle{display:none!important}
+  .app,.app.sidebar-collapsed{display:block!important;min-height:100vh}
+  .main{padding:18px 14px 112px!important;width:100%}
+
+  .top{
+    position:sticky;top:0;z-index:20;margin:-18px -14px 16px;padding:14px;
+    background:rgba(248,247,249,.95);backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);align-items:center!important
+  }
+  .top h2{font-size:20px}.top p{display:none}
+  .profile-chip{display:block!important;font-size:11px;padding:7px 10px}
+
+  .mobile-bottom-nav{
+    display:grid;grid-template-columns:repeat(5,1fr);position:fixed;
+    left:10px;right:10px;bottom:10px;z-index:70;background:rgba(255,255,255,.97);
+    border:1px solid var(--line);border-radius:22px;padding:7px 5px calc(7px + env(safe-area-inset-bottom));
+    box-shadow:0 14px 34px rgba(36,28,47,.14);backdrop-filter:blur(16px)
+  }
+  .mobile-nav-btn{
+    border:0;background:transparent;color:#827a8a;min-height:54px;padding:5px 2px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    border-radius:15px;font-size:9.5px;font-weight:600;transition:.2s ease
+  }
+  .mobile-nav-icon{font-size:18px;line-height:1}
+  .mobile-nav-btn.active{background:var(--am-soft);color:var(--am-dark)}
+
+  .mobile-sos-fab{
+    display:flex;position:fixed;right:18px;bottom:82px;z-index:72;align-items:center;gap:6px;
+    border:0;border-radius:999px;padding:10px 14px;color:#fff;background:var(--danger);
+    box-shadow:0 10px 26px rgba(216,90,112,.25);font-size:12px;font-weight:700
+  }
+
+  .hero{border-radius:22px!important;padding:22px 18px!important}
+  .hero h3{font-size:26px!important;line-height:1.2}
+  .hero p{font-size:13px;line-height:1.7}
+  .hero-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important}
+  .hero-actions .btn{min-height:44px;padding:10px!important;font-size:11px}
+  .hero-actions .btn:first-child{grid-column:1/-1}
+
+  .g4{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+  .g2,.g3{grid-template-columns:1fr!important}.grid{gap:12px!important}
+  .card{border-radius:19px!important;padding:16px!important}
+  .metric{padding:15px!important;border-radius:18px!important}.metric b{font-size:24px!important}.metric span{font-size:10.5px!important}
+
+  .day-grid{grid-template-columns:repeat(5,1fr)!important;gap:7px!important}
+  .day{height:34px!important;aspect-ratio:auto!important;border-radius:11px!important}
+
+  .moods,.chips{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px!important}
+  .mood,.chip{min-height:42px;padding:8px 9px!important;font-size:11px;text-align:center}
+  .moods .mood:first-child{grid-column:1/-1}
+  .slider{padding:13px!important;border-radius:15px!important}
+  input[type=range]{height:30px}
+  .field input,.field textarea,.field select{min-height:46px;border-radius:14px!important;font-size:13px}
+  .field textarea{min-height:112px}
+
+  .score{width:132px!important;height:132px!important}
+  .score>div{width:105px!important;height:105px!important}
+  .score strong{font-size:28px!important}
+
+  .resource-grid{grid-template-columns:1fr!important;gap:11px!important}
+  .resource-card{border-radius:18px!important;padding:16px!important}
+  .resource-card h4{font-size:16px!important}.resource-card p{font-size:12px!important}
+  .resource-icon{width:42px!important;height:42px!important;border-radius:14px!important}
+
+  .counselors{grid-template-columns:1fr!important;gap:12px!important}
+  .counselor{display:grid!important;grid-template-columns:104px 1fr;min-height:142px;border-radius:18px!important}
+  .c-photo{height:100%!important;min-height:142px}
+  .c-initials{width:60px!important;height:60px!important;font-size:20px}
+  .c-body{padding:14px!important}.c-body h4{font-size:15px!important}
+  .c-body p{font-size:11px!important;margin:5px 0 8px!important}
+  .c-body .tag{font-size:9.5px!important;padding:4px 6px!important}
+  .c-body .btn{min-height:38px;padding:8px 10px!important;font-size:10.5px}
+
+  .history-item{border-radius:16px!important;padding:13px!important}
+  .history-item h4{font-size:13px}.history-item p{font-size:11.5px!important}
+
+  .modal-wrap{align-items:flex-end!important;padding:0!important}
+  .modal{width:100%!important;max-height:92vh!important;border-radius:26px 26px 0 0!important}
+  .modal-head{padding:20px 18px!important}.modal-head h3{font-size:22px!important}
+  .modal-body,.resource-modal-body{padding:16px!important}
+  .breathe-orb{width:160px!important;height:160px!important;font-size:13px}
+  .grounding-step{grid-template-columns:44px 1fr!important;padding:9px 0!important}
+  .grounding-num{width:42px!important;height:42px!important;border-radius:13px!important}
+  canvas{max-height:220px!important}
+
+  .auth{display:block!important;min-height:100vh}.auth-brand{display:none!important}
+  .auth-form{min-height:100vh;padding:18px!important;align-items:center}
+  .auth-box{padding:24px 18px!important;border-radius:22px!important;box-shadow:none!important;border:1px solid var(--line)}
+  .auth-box h2{font-size:24px!important}
+
+  .card:hover,.counselor:hover,.resource-card:hover,.metric:hover{transform:none!important}
+}
+
+@media(max-width:380px){
+  .mobile-nav-btn{font-size:8.5px}.mobile-nav-icon{font-size:16px}
+  .hero h3{font-size:23px!important}.counselor{grid-template-columns:92px 1fr}
 }
 
 </style>
@@ -379,6 +504,16 @@ body{scroll-behavior:smooth}
   </main>
 </section>
 
+
+  <nav class="mobile-bottom-nav" aria-label="Navigasi mobile">
+    <button class="mobile-nav-btn active" data-page="home"><span class="mobile-nav-icon">⌂</span><span>Hari Ini</span></button>
+    <button class="mobile-nav-btn" data-page="checkin"><span class="mobile-nav-icon">♡</span><span>SoulCheck</span></button>
+    <button class="mobile-nav-btn" data-page="history"><span class="mobile-nav-icon">✎</span><span>Diary</span></button>
+    <button class="mobile-nav-btn" data-page="resources"><span class="mobile-nav-icon">✦</span><span>Sumber</span></button>
+    <button class="mobile-nav-btn" data-page="counselors"><span class="mobile-nav-icon">◌</span><span>Konselor</span></button>
+  </nav>
+  <button class="mobile-sos-fab" id="mobileSosBtn" aria-label="Buka SOS"><span>＋</span> SOS</button>
+
 <div class="modal-wrap" id="sosModal">
   <div class="modal sos-modal">
     <div class="modal-head">
@@ -502,6 +637,7 @@ async function logout(){try{await api('logoutAwareSoulUserApi',token)}catch(e){}
 function jump(page){
   $$('.page').forEach(x=>x.classList.remove('active'));$('#page-'+page).classList.add('active');
   $$('.nav [data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===page));
+  $$('.mobile-nav-btn[data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===page));
   const meta={home:['Hari Ini','Kenali keadaanmu, satu hari dalam satu waktu.'],checkin:['SoulCheck','Refleksi harian 2–3 menit.'],history:['Diary','Lihat kembali cerita dan pola harianmu.'],resources:['Sumber Daya','Latihan singkat berbasis refleksi, regulasi diri, dan dukungan sosial.'],counselors:['Konselor','Temukan dukungan dari HealMind.']};
   $('#pageTitle').textContent=meta[page][0];$('#pageSub').textContent=meta[page][1];
   if(page==='history')loadHistory();if(page==='counselors')renderCounselors();
@@ -605,7 +741,9 @@ $('#sidebarToggle').onclick=toggleSidebar;
 $('#resourceModal').addEventListener('click',e=>{if(e.target.id==='resourceModal')closeResource()});
 $('#sosModal').addEventListener('click',e=>{if(e.target.id==='sosModal')closeSos()});
 $('#loginTab').onclick=()=>setAuthMode('login');$('#registerTab').onclick=()=>setAuthMode('register');$('#authSubmit').onclick=handleAuth;
-$$('.nav [data-page]').forEach(b=>b.onclick=()=>{jump(b.dataset.page);closeMobileSidebar()});$$('[data-jump]').forEach(b=>b.onclick=()=>jump(b.dataset.jump));
+$$('.nav [data-page]').forEach(b=>b.onclick=()=>{jump(b.dataset.page);closeMobileSidebar()});
+$$('.mobile-nav-btn[data-page]').forEach(b=>b.onclick=()=>jump(b.dataset.page));
+$('#mobileSosBtn').onclick=openSos;$$('[data-jump]').forEach(b=>b.onclick=()=>jump(b.dataset.jump));
 $('#logoutBtn').onclick=logout;$('#sosNav').onclick=openSos;$('#heroSos').onclick=openSos;$('#closeSos').onclick=closeSos;$('#sosCounselor').onclick=()=>{closeSos();jump('counselors')};$('#heroCounselor').onclick=()=>jump('counselors');
 $$('.mood').forEach(b=>b.onclick=()=>{$$('.mood').forEach(x=>x.classList.remove('active'));b.classList.add('active');selectedMood=b.dataset.value});
 $$('.chip').forEach(b=>b.onclick=()=>{b.classList.toggle('active');selectedTags=$$('.chip.active').map(x=>x.textContent.trim())});
