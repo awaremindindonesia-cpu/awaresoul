@@ -481,9 +481,74 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .consent-row input{width:18px;height:18px;margin-top:1px;accent-color:var(--am)}
 .minor-note{margin:-4px 0 14px;padding:10px 12px;border-radius:12px;background:var(--am-soft);color:#5f536c;font-size:10.5px;line-height:1.55}
 .auth-success{margin-bottom:12px;padding:11px 12px;border-radius:12px;background:var(--mint-soft);color:#386d65;font-size:11.5px;line-height:1.55}
+
+/* ===== SESSION RESTORE + MOBILE RANGE GUARD ===== */
+.session-loader{
+  position:fixed;inset:0;z-index:9999;display:none;place-items:center;padding:24px;
+  background:var(--bg,#f8f6fa)
+}
+
+/* AUTH STATE MACHINE — auth and app can never be visible together */
+body[data-auth-state="loading"] .session-loader{display:grid!important}
+body[data-auth-state="loading"] #authScreen,
+body[data-auth-state="loading"] #appScreen{display:none!important}
+
+body[data-auth-state="out"] .session-loader{display:none!important}
+body[data-auth-state="out"] #authScreen{display:grid!important}
+body[data-auth-state="out"] #appScreen{display:none!important}
+
+body[data-auth-state="in"] .session-loader{display:none!important}
+body[data-auth-state="in"] #authScreen{display:none!important}
+body[data-auth-state="in"] #appScreen{display:grid!important}
+.session-loader-card{
+  width:min(320px,88vw);padding:24px;border:1px solid var(--line);border-radius:22px;
+  background:#fff;text-align:center;box-shadow:0 16px 42px rgba(36,28,47,.09)
+}
+.session-loader-mark{
+  width:52px;height:52px;margin:0 auto 12px;border-radius:16px;display:grid;place-items:center;
+  background:var(--am-soft);color:var(--am);font-size:25px;font-weight:800
+}
+.session-loader-card b{display:block;font-size:15px;margin-bottom:5px}
+.session-loader-card span{display:block;color:var(--muted);font-size:11.5px}
+
+@media(max-width:900px){
+  /* Mobile-safe slider:
+     native range interaction is disabled; JS changes it only after a deliberate
+     horizontal drag or tap on the track. Vertical gestures remain page scroll. */
+  .slider{touch-action:pan-y;overscroll-behavior:auto}
+  .slider input[type=range]{
+    pointer-events:none;
+    touch-action:none;
+  }
+}
+
+
+/* ===== AUTH GATE: mobile app controls must never appear on login ===== */
+body:not(.app-authenticated) .mobile-bottom-nav,
+body:not(.app-authenticated) .mobile-sos-fab{
+  display:none!important;
+}
+
+
+/* Final mobile auth hard gate */
+body[data-auth-state="loading"] .mobile-bottom-nav,
+body[data-auth-state="loading"] .mobile-sos-fab,
+body[data-auth-state="out"] .mobile-bottom-nav,
+body[data-auth-state="out"] .mobile-sos-fab{
+  display:none!important;
+}
+
 </style>
 </head>
-<body>
+<body data-auth-state="loading">
+
+<div class="session-loader" id="sessionLoader" aria-live="polite">
+  <div class="session-loader-card">
+    <div class="session-loader-mark">♡</div>
+    <b>Memuat AwareSoul</b>
+    <span>Memulihkan sesi kamu…</span>
+  </div>
+</div>
 
 <section id="authScreen" class="auth">
   <div class="auth-brand">
@@ -510,15 +575,15 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
         </label>
         <div class="minor-note hidden" id="minorNote">Untuk peserta usia 13–17 tahun, status persetujuan wali dicatat terpisah sesuai protokol penelitian.</div>
       </div>
-      <div class="field"><label>Email</label><input id="authEmail" type="email" autocomplete="email"></div>
-      <div class="field"><label>Password</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="Minimal 8 karakter"></div>
+      <div class="field"><label>Email</label><input id="authEmail" name="email" type="email" inputmode="email" autocapitalize="none" autocomplete="email"></div>
+      <div class="field"><label>Password</label><input id="authPassword" name="password" type="password" autocomplete="current-password" placeholder="Minimal 8 karakter"></div>
       <div class="error" id="authError"></div>
       <button class="btn primary wide" id="authSubmit">Masuk</button>
     </div>
   </div>
 </section>
 
-<section id="appScreen" class="app hidden">
+<section id="appScreen" class="app">
   <button class="sidebar-toggle" id="sidebarToggle" aria-label="Buka atau tutup sidebar">☰</button>
   <aside class="sidebar">
     <div class="logo"><div class="logo-mark">♡</div><div class="logo-copy"><strong>AwareSoul</strong><span>AwareMind Indonesia</span></div></div>
@@ -830,6 +895,7 @@ const sb = window.supabase.createClient(
 );
 
 let token = '';
+const LAST_EMAIL_KEY = 'awaresoul_last_email';
 let profile = null;
 let dashboard = null;
 let selectedMood = 'Sangat Baik';
@@ -843,6 +909,19 @@ let authMode = 'login';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
+
+function setAuthState(state){
+  if(!['loading','out','in'].includes(state))state='out';
+  document.body.dataset.authState=state;
+  document.body.classList.toggle('app-authenticated',state==='in');
+
+  // Extra hard guard for mobile/content:// viewers.
+  const auth=$('#authScreen'), app=$('#appScreen'), loader=$('#sessionLoader');
+  if(auth) auth.setAttribute('aria-hidden', state==='out' ? 'false' : 'true');
+  if(app) app.setAttribute('aria-hidden', state==='in' ? 'false' : 'true');
+  if(loader) loader.setAttribute('aria-hidden', state==='loading' ? 'false' : 'true');
+}
+
 
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
 function today(){return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Jakarta'})}
@@ -1035,6 +1114,7 @@ async function handleAuth(){
       });
       if(!res.success)throw new Error(res.error||'Pendaftaran gagal.');
       if(res.needsEmailConfirmation){
+        localStorage.setItem(LAST_EMAIL_KEY,email);
         setAuthMode('login');
         $('#authEmail').value=email;
         $('#authError').innerHTML='<div class="auth-success">Akun berhasil dibuat. Cek email verifikasi, lalu kembali dan masuk.</div>';
@@ -1044,32 +1124,67 @@ async function handleAuth(){
       res=await api('loginAwareSoulUserApi',{email,password});
       if(!res.success)throw new Error(res.error||'Email atau password salah.');
     }
+    localStorage.setItem(LAST_EMAIL_KEY,email);
     profile=res.profile;await enterApp();
   }catch(e){$('#authError').textContent=e.message||String(e)}
   finally{$('#authSubmit').disabled=false}
 }
 async function restore(){
+  setAuthState('loading');
+
   try{
-    const {data:{session}}=await sb.auth.getSession();
-    if(!session)return;
-    const res=await api('verifyAwareSoulSessionApi');
-    if(res.success){profile=res.profile;await enterApp()}
-  }catch(e){console.warn('Restore session:',e)}
+    const rememberedEmail=localStorage.getItem(LAST_EMAIL_KEY)||'';
+    if(rememberedEmail&&!$('#authEmail').value)$('#authEmail').value=rememberedEmail;
+
+    // getSession reads the persisted Supabase session first.
+    const {data:{session},error}=await sb.auth.getSession();
+    if(error)throw error;
+
+    if(!session?.user){
+      setAuthState('out');
+      return;
+    }
+
+    // Avoid a second auth network round-trip (getUser) during startup.
+    // We already have session.user; only fetch its RLS-protected profile.
+    profile=await getProfileForUser(session.user);
+
+    if(profile?.email)localStorage.setItem(LAST_EMAIL_KEY,profile.email);
+    await enterApp();
+  }catch(e){
+    console.warn('Restore session:',e);
+    profile=null;
+    dashboard=null;
+    setAuthState('out');
+  }
 }
 async function enterApp(){
-  $('#authScreen').classList.add('hidden');$('#appScreen').classList.remove('hidden');
+  setAuthState('in');
   window.scrollTo(0,0);
+
   $('#profileChip').textContent=profile?.participantCode||'AS';
   $('#hello').textContent='Halo, '+(profile?.displayName||'teman')+'.';
-  await Promise.all([loadDashboard(),loadCounselors()]);
+
+  // Do not block entry while secondary content loads.
+  loadDashboard().catch(e=>console.warn('Dashboard load:',e));
+  loadCounselors().catch(e=>console.warn('Counselor load:',e));
 }
 function logoutLocal(){
-  token='';profile=null;dashboard=null;analyticsHistory=[];
-  $('#appScreen').classList.add('hidden');$('#authScreen').classList.remove('hidden');
+  token='';
+  profile=null;
+  dashboard=null;
+  analyticsHistory=[];
+  setAuthState('out');
+
+  $('#authPassword').value='';
+  const rememberedEmail=localStorage.getItem(LAST_EMAIL_KEY)||'';
+  if(rememberedEmail)$('#authEmail').value=rememberedEmail;
+
   window.scrollTo(0,0);
 }
 async function logout(){try{await api('logoutAwareSoulUserApi')}catch(e){}logoutLocal()}
 function jump(page){
+  if(!profile || document.body.dataset.authState!=='in') return;
   const target=$('#page-'+page);
   if(!target)return;
 
@@ -1113,6 +1228,10 @@ function scoreNow(){
 }
 function refreshScore(){[['energy','vEnergy'],['calm','vCalm'],['social','vSocial'],['stress','vStress']].forEach(([a,b])=>$('#'+b).textContent=$('#'+a).value);const sc=scoreNow();$('#liveScore').textContent=sc;$('#scoreRing').style.setProperty('--score',sc)}
 async function saveCheckin(){
+  if(!profile || document.body.dataset.authState!=='in'){
+    toast('Silakan masuk terlebih dahulu.');
+    return;
+  }
   const payload={date:today(),mood:selectedMood,energyPositive:+$('#energy').value,emotionalCalm:+$('#calm').value,socialConnection:+$('#social').value,stressTension:+$('#stress').value,tags:selectedTags,diary:$('#diary').value.trim(),gratitude1:$('#g1').value.trim(),gratitude2:$('#g2').value.trim(),gratitude3:$('#g3').value.trim()};
   $('#saveCheckin').disabled=true;
   try{
@@ -1317,9 +1436,9 @@ function unlockPageScroll(){
   document.body.style.top='';
   window.scrollTo(0,lockedScrollY);
 }
-function openSos(){goSosStage(1);$('#sosModal').classList.add('open');lockPageScroll()}
+function openSos(){if(!profile||document.body.dataset.authState!=='in')return;goSosStage(1);$('#sosModal').classList.add('open');lockPageScroll()}
 function closeSos(){$('#sosModal').classList.remove('open');unlockPageScroll()}
-function openMore(){$('#mobileMoreModal').classList.add('open');lockPageScroll()}
+function openMore(){if(!profile||document.body.dataset.authState!=='in')return;$('#mobileMoreModal').classList.add('open');lockPageScroll()}
 function closeMore(){$('#mobileMoreModal').classList.remove('open');unlockPageScroll()}
 function openResource(type){
   const title=$('#resourceTitle'),sub=$('#resourceSub'),body=$('#resourceBody');
@@ -1335,6 +1454,91 @@ function openResource(type){
   $('#resourceModal').classList.add('open');lockPageScroll();
 }
 function closeResource(){$('#resourceModal').classList.remove('open');unlockPageScroll()}
+
+function installMobileRangeGuard(){
+  if(window.innerWidth>900)return;
+
+  ['energy','calm','social','stress'].forEach(id=>{
+    const input=$('#'+id);
+    if(!input)return;
+    const wrap=input.closest('.slider');
+    if(!wrap)return;
+
+    let gesture=null;
+
+    const setFromX=x=>{
+      const rect=input.getBoundingClientRect();
+      const min=Number(input.min||0),max=Number(input.max||100);
+      const ratio=Math.max(0,Math.min(1,(x-rect.left)/Math.max(rect.width,1)));
+      input.value=String(Math.round(min+(max-min)*ratio));
+      refreshScore();
+    };
+
+    wrap.addEventListener('pointerdown',e=>{
+      // Only begin slider intent when the pointer starts around the actual track.
+      const rect=input.getBoundingClientRect();
+      const hitTrack=e.clientY>=rect.top-14 && e.clientY<=rect.bottom+14 &&
+                     e.clientX>=rect.left-8 && e.clientX<=rect.right+8;
+      if(!hitTrack)return;
+
+      gesture={
+        id:e.pointerId,
+        startX:e.clientX,
+        startY:e.clientY,
+        lastX:e.clientX,
+        horizontal:false,
+        vertical:false,
+        moved:false
+      };
+    },{passive:true});
+
+    wrap.addEventListener('pointermove',e=>{
+      if(!gesture||e.pointerId!==gesture.id)return;
+      const dx=e.clientX-gesture.startX;
+      const dy=e.clientY-gesture.startY;
+      const ax=Math.abs(dx),ay=Math.abs(dy);
+      gesture.lastX=e.clientX;
+
+      if(ax>4||ay>4)gesture.moved=true;
+
+      if(!gesture.horizontal&&!gesture.vertical){
+        // A clear vertical gesture belongs to page scrolling and NEVER changes the value.
+        if(ay>=8 && ay>ax+2){
+          gesture.vertical=true;
+          return;
+        }
+        // Value changes only after horizontal intent is clear.
+        if(ax>=8 && ax>ay+2){
+          gesture.horizontal=true;
+          try{wrap.setPointerCapture(e.pointerId)}catch(_){}
+        }
+      }
+
+      if(gesture.horizontal){
+        setFromX(e.clientX);
+      }
+    },{passive:true});
+
+    const finish=e=>{
+      if(!gesture)return;
+      if(e?.pointerId!=null&&e.pointerId!==gesture.id)return;
+
+      // A deliberate tap on the track changes the value.
+      // A vertical swipe does absolutely nothing to the slider.
+      if(!gesture.vertical && !gesture.horizontal && !gesture.moved){
+        setFromX(e.clientX);
+      }else if(gesture.horizontal){
+        setFromX(gesture.lastX);
+      }
+
+      try{wrap.releasePointerCapture(gesture.id)}catch(_){}
+      gesture=null;
+    };
+
+    wrap.addEventListener('pointerup',finish,{passive:true});
+    wrap.addEventListener('pointercancel',()=>{gesture=null},{passive:true});
+  });
+}
 $('#sidebarToggle').onclick=toggleSidebar;
 $('#resourceModal').addEventListener('click',e=>{if(e.target.id==='resourceModal')closeResource()});
 $('#mobileMoreModal').addEventListener('click',e=>{if(e.target.id==='mobileMoreModal')closeMore()});
@@ -1353,7 +1557,7 @@ $('#mobileSosBtn').onclick=openSos;$$('[data-jump]').forEach(b=>b.onclick=()=>ju
 $('#logoutBtn').onclick=logout;$('#sosNav').onclick=openSos;$('#heroSos').onclick=openSos;$('#closeSos').onclick=closeSos;$('#sosCounselor').onclick=()=>{closeSos();jump('counselors')};$('#heroCounselor').onclick=()=>jump('counselors');
 $$('.mood').forEach(b=>b.onclick=()=>{$$('.mood').forEach(x=>x.classList.remove('active'));b.classList.add('active');selectedMood=b.dataset.value});
 $$('.chip').forEach(b=>b.onclick=()=>{b.classList.toggle('active');selectedTags=$$('.chip.active').map(x=>x.textContent.trim())});
-['energy','calm','social','stress'].forEach(id=>$('#'+id).oninput=refreshScore);$('#saveCheckin').onclick=saveCheckin;
+['energy','calm','social','stress'].forEach(id=>$('#'+id).addEventListener('input',refreshScore));installMobileRangeGuard();$('#saveCheckin').onclick=saveCheckin;
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     if($('#sosModal').classList.contains('open'))closeSos();
@@ -1365,8 +1569,12 @@ window.addEventListener('resize',()=>{
   if(trendChart)trendChart.resize();
   if(analyticsTrendChart)analyticsTrendChart.resize();
 },{passive:true});
+// Keep runtime logout synchronized with Supabase.
+// Initial session restoration is handled only by restore() to avoid UI races.
 sb.auth.onAuthStateChange((event,session)=>{
-  if(event==='SIGNED_OUT'&&!session){profile=null;dashboard=null}
+  if(event==='SIGNED_OUT'&&!session && document.body.dataset.authState==='in'){
+    logoutLocal();
+  }
 });
 refreshScore();restore();
 </script>
