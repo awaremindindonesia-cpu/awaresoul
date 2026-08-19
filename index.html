@@ -519,47 +519,132 @@ body:not(.app-authenticated) .mobile-sos-fab{
 }
 
 
-/* ===== AWARESOUL V6.5 — MOBILE AUTH HARDENING + PASSWORD RECOVERY ===== */
+/* ============================================================
+   AWARESOUL V6.6 — UNIVERSAL AUTH STATE
+   iOS Safari + Android Chrome/Samsung Internet + Desktop
+   ============================================================ */
+
+/* Hidden ALWAYS wins, including inside mobile media rules. */
+#appScreen.hidden,
+#authScreen.hidden,
+.app.hidden,
+.auth.hidden{
+  display:none!important;
+}
+
+/* Never reserve bottom-nav space while user is on auth. */
+body:not(.app-authenticated){
+  padding-bottom:0!important;
+}
+
+/* Mobile controls are opt-in, never opt-out. */
+.mobile-bottom-nav,
+.mobile-sos-fab{
+  display:none!important;
+}
+
+@media(max-width:900px){
+  body.app-authenticated .mobile-bottom-nav{
+    display:grid!important;
+  }
+  body.app-authenticated .mobile-sos-fab{
+    display:flex!important;
+  }
+
+  #authScreen.auth{
+    display:grid;
+    min-height:100vh;
+    min-height:100dvh;
+  }
+
+  #authScreen .auth-form{
+    min-height:100vh;
+    min-height:100dvh;
+    padding:
+      max(18px,env(safe-area-inset-top))
+      max(16px,env(safe-area-inset-right))
+      max(18px,env(safe-area-inset-bottom))
+      max(16px,env(safe-area-inset-left));
+    align-content:center;
+  }
+
+  #authScreen .auth-box{
+    width:100%;
+    max-width:460px;
+    padding:24px 20px;
+    border-radius:22px;
+  }
+
+  #authScreen input[type="email"],
+  #authScreen input[type="password"],
+  #authScreen input[type="text"],
+  #authScreen select{
+    min-height:48px;
+    font-size:16px!important;
+  }
+}
+
+@media(max-width:380px){
+  #authScreen .auth-box{padding:20px 16px}
+  #authScreen .auth-box h2{font-size:25px}
+}
+
+/* Prevent state mixing even if a browser restores a stale DOM snapshot. */
+body:not(.app-authenticated) #appScreen{
+  display:none!important;
+}
+body.app-authenticated #authScreen{
+  display:none!important;
+}
+
+/* Password recovery UI */
 .auth-help-row{
   display:flex;
   justify-content:flex-end;
-  margin-top:-4px;
-  margin-bottom:14px;
+  margin:-3px 0 14px;
 }
 .auth-link{
-  appearance:none;border:0;background:transparent;color:var(--am,#7042d6);
-  font:inherit;font-size:13px;font-weight:700;padding:3px 0;cursor:pointer;
+  border:0;
+  background:transparent;
+  padding:4px 0;
+  color:var(--am);
+  font:inherit;
+  font-size:13px;
+  font-weight:800;
+  cursor:pointer;
 }
 .auth-link:hover{text-decoration:underline}
 .auth-link.hidden{display:none!important}
 
-.auth-box form{display:block}
-.auth-box input[type=email],
-.auth-box input[type=password]{
-  font-size:16px; /* iOS: hindari auto zoom */
+.auth-state-note{
+  margin-bottom:12px;
+  padding:11px 12px;
+  border-radius:12px;
+  background:var(--mint-soft);
+  color:#386d65;
+  font-size:12px;
+  line-height:1.5;
 }
-.auth-submit-state{
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;
-}
-.auth-mini-spinner{
-  width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;
-  border-radius:50%;animation:authSpin .7s linear infinite
-}
-@keyframes authSpin{to{transform:rotate(360deg)}}
 
 .password-reset-modal .modal{width:min(92vw,460px)}
-.password-reset-modal .modal-head{padding-bottom:18px}
 .password-reset-modal .modal-body{padding:22px}
 .password-reset-modal .reset-actions{display:flex;gap:10px;margin-top:16px}
 .password-reset-modal .reset-actions .btn{flex:1}
-.password-reset-modal .reset-note{color:var(--muted,#6d6b7c);font-size:12px;line-height:1.55;margin-top:8px}
-.password-reset-modal .reset-status{margin-top:12px;min-height:20px;font-size:13px;line-height:1.45}
+.password-reset-modal .reset-note{
+  color:var(--muted);font-size:12px;line-height:1.55;margin-top:8px
+}
+.password-reset-modal .reset-status{
+  min-height:20px;margin-top:12px;font-size:13px;line-height:1.45
+}
 .password-reset-modal .reset-status.ok{color:#267257}
 .password-reset-modal .reset-status.bad{color:#b13d48}
 
 @media(max-width:640px){
   .password-reset-modal .modal{
-    width:100%;max-width:none;border-radius:22px 22px 0 0
+    width:calc(100% - 20px);
+    max-width:none;
+    margin:auto 10px max(10px,env(safe-area-inset-bottom));
+    border-radius:22px;
   }
   .password-reset-modal .reset-actions{flex-direction:column-reverse}
 }
@@ -588,25 +673,60 @@ body:not(.app-authenticated) .mobile-sos-fab{
     <div class="auth-box">
       <h2 id="authTitle">Selamat datang</h2>
       <p>Masuk untuk melanjutkan perjalanan AwareSoul.</p>
+
       <div class="tabs">
         <button type="button" class="tab active" id="loginTab">Masuk</button>
         <button type="button" class="tab" id="registerTab">Daftar</button>
       </div>
+
       <form id="authForm" novalidate>
         <div id="registerFields" class="hidden">
-          <div class="field"><label for="regName">Nama panggilan</label><input id="regName" name="display_name" autocomplete="name"></div>
-          <div class="field"><label for="regAge">Kelompok usia</label><select id="regAge" name="age_group"><option>13–17 tahun</option><option selected>18–25 tahun</option><option>26–30 tahun</option></select></div>
+          <div class="field">
+            <label for="regName">Nama panggilan</label>
+            <input id="regName" name="display_name" type="text" autocomplete="name">
+          </div>
+          <div class="field">
+            <label for="regAge">Kelompok usia</label>
+            <select id="regAge" name="age_group">
+              <option>13–17 tahun</option>
+              <option selected>18–25 tahun</option>
+              <option>26–30 tahun</option>
+            </select>
+          </div>
           <label class="consent-row">
             <input type="checkbox" id="regConsent">
             <span>Saya memahami bahwa AwareSoul adalah alat refleksi dan monitoring wellbeing, bukan layanan diagnosis, dan saya menyetujui penggunaan data sesuai penjelasan penelitian.</span>
           </label>
           <div class="minor-note hidden" id="minorNote">Untuk peserta usia 13–17 tahun, status persetujuan wali dicatat terpisah sesuai protokol penelitian.</div>
         </div>
-        <div class="field"><label for="authEmail">Email</label><input id="authEmail" name="username" type="email" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username"></div>
-        <div class="field"><label for="authPassword">Password</label><input id="authPassword" name="password" type="password" autocomplete="current-password" placeholder="Minimal 8 karakter"></div>
+
+        <div class="field">
+          <label for="authEmail">Email</label>
+          <input
+            id="authEmail"
+            name="username"
+            type="email"
+            inputmode="email"
+            autocapitalize="none"
+            autocorrect="off"
+            spellcheck="false"
+            autocomplete="username">
+        </div>
+
+        <div class="field">
+          <label for="authPassword">Password</label>
+          <input
+            id="authPassword"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Minimal 8 karakter">
+        </div>
+
         <div class="auth-help-row" id="forgotPasswordRow">
           <button type="button" class="auth-link" id="forgotPasswordBtn">Lupa password?</button>
         </div>
+
         <div class="error" id="authError" aria-live="polite"></div>
         <button type="submit" class="btn primary wide" id="authSubmit">Masuk</button>
       </form>
@@ -906,14 +1026,14 @@ body:not(.app-authenticated) .mobile-sos-fab{
   <div class="modal">
     <div class="modal-head">
       <h3>Reset Password</h3>
-      <p style="margin:6px 0 0;opacity:.85">Kami akan mengirim tautan reset ke email AwareSoul kamu.</p>
+      <p style="margin:6px 0 0;opacity:.85">Masukkan email yang kamu gunakan saat mendaftar AwareSoul.</p>
     </div>
     <div class="modal-body">
       <div class="field">
         <label for="resetEmail">Email</label>
-        <input id="resetEmail" name="reset_email" type="email" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="email" placeholder="nama@email.com">
+        <input id="resetEmail" type="email" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="email">
       </div>
-      <div class="reset-note">Kalau email tersebut terdaftar, kamu akan menerima email reset. Cek juga folder Spam/Promosi.</div>
+      <div class="reset-note">Jika email terdaftar, link reset akan dikirim. Cek Inbox, Spam, atau Promosi.</div>
       <div class="reset-status" id="resetRequestStatus" aria-live="polite"></div>
       <div class="reset-actions">
         <button type="button" class="btn soft" id="cancelResetRequest">Batal</button>
@@ -927,7 +1047,7 @@ body:not(.app-authenticated) .mobile-sos-fab{
   <div class="modal">
     <div class="modal-head">
       <h3>Buat Password Baru</h3>
-      <p style="margin:6px 0 0;opacity:.85">Masukkan password baru untuk akun AwareSoul kamu.</p>
+      <p style="margin:6px 0 0;opacity:.85">Password baru tidak menghapus data AwareSoul kamu.</p>
     </div>
     <div class="modal-body">
       <div class="field">
@@ -938,7 +1058,6 @@ body:not(.app-authenticated) .mobile-sos-fab{
         <label for="confirmRecoveryPassword">Ulangi password baru</label>
         <input id="confirmRecoveryPassword" type="password" autocomplete="new-password" placeholder="Ketik ulang password">
       </div>
-      <div class="reset-note">Password baru hanya mengubah kredensial login. Data SoulCheck, diary, progress, dan participant code tetap di akun yang sama.</div>
       <div class="reset-status" id="recoveryStatus" aria-live="polite"></div>
       <div class="reset-actions">
         <button type="button" class="btn primary wide" id="saveNewPasswordBtn">Simpan Password Baru</button>
@@ -949,7 +1068,7 @@ body:not(.app-authenticated) .mobile-sos-fab{
 
 <div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0"></script>
 <script>
 // ===============================================================
 // INTEGRATION CONFIG — Supabase untuk AwareSoul, GS untuk HealMind
@@ -984,11 +1103,139 @@ let analyticsTrendChart = null;
 let analyticsHistory = [];
 let lockedScrollY = 0;
 let authMode = 'login';
-let authRequestBusy = false;
+let authBusy = false;
+let authBootHandled = false;
+let authHydrating = false;
 let passwordRecoveryMode = /(?:type=recovery|type%3Drecovery)/i.test(location.hash + location.search);
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
+
+function safeStorageGet(key){
+  try{return localStorage.getItem(key)||''}catch(e){return ''}
+}
+function safeStorageSet(key,value){
+  try{localStorage.setItem(key,String(value??''))}catch(e){}
+}
+
+function delay(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+
+async function withTimeout(promise,ms,message){
+  let timer;
+  try{
+    return await Promise.race([
+      promise,
+      new Promise((_,reject)=>{
+        timer=setTimeout(()=>reject(new Error(message||'Permintaan terlalu lama.')),ms);
+      })
+    ]);
+  }finally{
+    clearTimeout(timer);
+  }
+}
+
+function friendlyAuthError(message,mode='login'){
+  const raw=String(message||'');
+  const low=raw.toLowerCase();
+
+  if(low.includes('invalid login credentials') || low.includes('invalid_credentials')){
+    return 'Email atau password tidak cocok. Jika kamu lupa password, pilih “Lupa password?”.';
+  }
+  if(low.includes('already registered') || low.includes('already been registered') || low.includes('user already registered')){
+    return 'Email ini sudah terdaftar. Pilih Masuk, atau gunakan “Lupa password?” jika lupa.';
+  }
+  if(low.includes('email not confirmed')){
+    return 'Email belum terverifikasi. Cek email masuk atau hubungi admin AwareSoul.';
+  }
+  if(low.includes('rate limit') || low.includes('too many') || low.includes('429')){
+    return 'Terlalu banyak percobaan. Tunggu beberapa menit lalu coba lagi.';
+  }
+  if(low.includes('network') || low.includes('fetch') || low.includes('terlalu lama')){
+    return 'Koneksi ke server sedang lambat atau terputus. Periksa internet lalu coba lagi.';
+  }
+  return raw || (mode==='register'?'Pendaftaran gagal.':'Login gagal.');
+}
+
+function setAuthBusy(value){
+  authBusy=!!value;
+  const btn=$('#authSubmit');
+  if(!btn)return;
+  btn.disabled=authBusy;
+  btn.textContent=authBusy
+    ? (authMode==='register'?'Membuat akun…':'Sedang masuk…')
+    : (authMode==='register'?'Buat Akun':'Masuk');
+}
+
+function showAuthScreen(message=''){
+  document.body.classList.remove('app-authenticated','auth-restoring','scroll-locked');
+  document.body.style.top='';
+  $('#appScreen').classList.add('hidden');
+  $('#authScreen').classList.remove('hidden');
+
+  const remembered=safeStorageGet(LAST_EMAIL_KEY);
+  if(remembered&&!$('#authEmail').value)$('#authEmail').value=remembered;
+
+  if(message)$('#authError').textContent=message;
+}
+
+function showAppScreen(){
+  document.body.classList.remove('auth-restoring');
+  document.body.classList.add('app-authenticated');
+  $('#authScreen').classList.add('hidden');
+  $('#appScreen').classList.remove('hidden');
+}
+
+async function getProfileForUserWithRetry(user,attempts=6){
+  let lastError=null;
+  for(let i=0;i<attempts;i++){
+    try{
+      return await getProfileForUser(user);
+    }catch(err){
+      lastError=err;
+      const msg=String(err?.message||'').toLowerCase();
+      const retryable=
+        msg.includes('0 rows') ||
+        msg.includes('no rows') ||
+        msg.includes('json object requested') ||
+        msg.includes('pgrst116') ||
+        msg.includes('network') ||
+        msg.includes('fetch');
+
+      if(!retryable && i>=1)throw err;
+      if(i<attempts-1)await delay(250 + i*300);
+    }
+  }
+  throw lastError || new Error('Profil AwareSoul belum tersedia.');
+}
+
+async function hydrateFromSession(session){
+  if(authHydrating || passwordRecoveryMode)return;
+  if(!session?.user){
+    showAuthScreen();
+    return;
+  }
+
+  authHydrating=true;
+  try{
+    const p=await withTimeout(
+      getProfileForUserWithRetry(session.user),
+      12000,
+      'Profil AwareSoul terlalu lama dimuat.'
+    );
+
+    if(!p)throw new Error('Profil AwareSoul belum tersedia.');
+    profile=p;
+
+    if(profile?.email)safeStorageSet(LAST_EMAIL_KEY,profile.email);
+    await enterApp();
+  }catch(err){
+    console.warn('Session hydration:',err);
+    showAuthScreen('Sesi ditemukan, tetapi profil belum berhasil dimuat. Coba muat ulang halaman.');
+  }finally{
+    authHydrating=false;
+  }
+}
+
 
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
 function today(){return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Jakarta'})}
@@ -1086,7 +1333,7 @@ async function api(action,...args){
       if(!data.session){
         return {success:true,needsEmailConfirmation:true,message:'Akun dibuat. Cek email verifikasi lalu masuk.'};
       }
-      return {success:true,profile:await getProfileForUser(data.user)};
+      return {success:true,profile:await getProfileForUserWithRetry(data.user)};
     }
 
     if(action==='loginAwareSoulUserApi'){
@@ -1095,13 +1342,13 @@ async function api(action,...args){
         email:String(payload.email||'').trim().toLowerCase(),password:String(payload.password||'')
       });
       if(error)throw error;
-      return {success:true,profile:await getProfileForUser(data.user)};
+      return {success:true,profile:await getProfileForUserWithRetry(data.user)};
     }
 
     if(action==='verifyAwareSoulSessionApi'){
       const user=await getCurrentUser();
       if(!user)return {success:false,error:'Sesi tidak ditemukan.'};
-      return {success:true,profile:await getProfileForUser(user)};
+      return {success:true,profile:await getProfileForUserWithRetry(user)};
     }
 
     if(action==='logoutAwareSoulUserApi'){
@@ -1157,55 +1404,110 @@ async function publicCounselors(){
   if(!res.ok) throw new Error('Daftar konselor gagal dimuat.');
   return await res.json();
 }
+function setAuthMode(mode){
+  authMode=mode;
+  const reg=mode==='register';
 
-function withTimeout(promise,ms,message){
-  return Promise.race([
-    promise,
-    new Promise((_,reject)=>setTimeout(()=>reject(new Error(message||'Permintaan terlalu lama. Silakan coba lagi.')),ms))
-  ]);
+  $('#registerFields').classList.toggle('hidden',!reg);
+  $('#loginTab').classList.toggle('active',!reg);
+  $('#registerTab').classList.toggle('active',reg);
+  $('#forgotPasswordRow').classList.toggle('hidden',reg);
+
+  $('#authPassword').setAttribute('autocomplete',reg?'new-password':'current-password');
+  $('#authEmail').setAttribute('autocomplete',reg?'email':'username');
+
+  if(!authBusy)$('#authSubmit').textContent=reg?'Buat Akun':'Masuk';
+
+  if(!$('#authError').querySelector('.auth-state-note')){
+    $('#authError').textContent='';
+  }
 }
 
-function friendlyAuthError(message,mode='login'){
-  const raw=String(message||'');
-  const low=raw.toLowerCase();
+async function handleAuth(event){
+  event?.preventDefault?.();
+  if(authBusy)return;
 
-  if(low.includes('invalid login credentials') || low.includes('invalid_credentials')){
-    return 'Email atau password tidak cocok. Jika kamu pernah mendaftar, gunakan “Lupa password?” untuk membuat password baru.';
-  }
-  if(low.includes('user already registered') || low.includes('already registered') || low.includes('already been registered')){
-    return 'Email ini sudah terdaftar. Silakan pilih Masuk. Jika lupa password, gunakan “Lupa password?”.';
-  }
-  if(low.includes('email not confirmed')){
-    return 'Email belum terverifikasi. Cek inbox email atau hubungi admin AwareSoul.';
-  }
-  if(low.includes('rate limit') || low.includes('too many') || low.includes('429')){
-    return 'Terlalu banyak percobaan dalam waktu singkat. Tunggu sebentar lalu coba lagi.';
-  }
-  if(low.includes('network') || low.includes('fetch') || low.includes('terlalu lama')){
-    return 'Koneksi ke server sedang lambat atau terputus. Pastikan internet aktif lalu coba lagi.';
-  }
-  return raw || (mode==='register'?'Pendaftaran gagal.':'Login gagal.');
-}
+  const email=String($('#authEmail').value||'').trim().toLowerCase();
+  const password=String($('#authPassword').value||'');
 
-function setAuthBusy(busy,label){
-  authRequestBusy=!!busy;
-  const btn=$('#authSubmit');
-  if(!btn)return;
-  btn.disabled=!!busy;
-  if(busy){
-    btn.innerHTML='<span class="auth-submit-state"><span class="auth-mini-spinner"></span>'+(label||'Memproses...')+'</span>';
-  }else{
-    btn.textContent=authMode==='register'?'Buat Akun':'Masuk';
+  $('#authError').textContent='';
+
+  if(!navigator.onLine){
+    $('#authError').textContent='Perangkat sedang offline. Sambungkan internet lalu coba lagi.';
+    return;
+  }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    $('#authError').textContent='Masukkan alamat email yang valid.';
+    return;
+  }
+  if(!password){
+    $('#authError').textContent='Masukkan password terlebih dahulu.';
+    return;
+  }
+
+  setAuthBusy(true);
+
+  try{
+    let res;
+
+    if(authMode==='register'){
+      if(!$('#regConsent')?.checked)throw new Error('Centang persetujuan terlebih dahulu.');
+      if($('#regName').value.trim().length<2)throw new Error('Nama panggilan minimal 2 karakter.');
+      if(password.length<8)throw new Error('Password minimal 8 karakter.');
+
+      res=await withTimeout(
+        api('registerAwareSoulUserApi',{
+          displayName:$('#regName').value.trim(),
+          ageGroup:$('#regAge').value,
+          email,
+          password,
+          consentAccepted:true
+        }),
+        30000,
+        'Pendaftaran terlalu lama.'
+      );
+
+      if(!res.success)throw new Error(res.error||'Pendaftaran gagal.');
+      safeStorageSet(LAST_EMAIL_KEY,email);
+
+      if(res.needsEmailConfirmation){
+        setAuthMode('login');
+        $('#authEmail').value=email;
+        $('#authPassword').value='';
+        $('#authError').innerHTML='<div class="auth-state-note">Akun berhasil dibuat. Cek email verifikasi, lalu kembali dan masuk.</div>';
+        return;
+      }
+    }else{
+      res=await withTimeout(
+        api('loginAwareSoulUserApi',{email,password}),
+        30000,
+        'Login terlalu lama.'
+      );
+
+      if(!res.success)throw new Error(res.error||'Email atau password salah.');
+    }
+
+    safeStorageSet(LAST_EMAIL_KEY,email);
+
+    if(!res.profile){
+      throw new Error('Login berhasil, tetapi profil AwareSoul belum siap. Coba muat ulang beberapa detik lagi.');
+    }
+
+    profile=res.profile;
+    await enterApp();
+
+  }catch(err){
+    $('#authError').textContent=friendlyAuthError(err?.message||String(err),authMode);
+  }finally{
+    setAuthBusy(false);
   }
 }
 
 function openForgotPassword(){
-  const email=String($('#authEmail').value||'').trim().toLowerCase();
-  $('#resetEmail').value=email;
+  $('#resetEmail').value=String($('#authEmail').value||safeStorageGet(LAST_EMAIL_KEY)||'').trim().toLowerCase();
   $('#resetRequestStatus').textContent='';
   $('#resetRequestStatus').className='reset-status';
   $('#forgotPasswordModal').classList.add('open');
-  setTimeout(()=>$('#resetEmail').focus(),80);
 }
 
 function closeForgotPassword(){
@@ -1220,6 +1522,11 @@ async function sendPasswordReset(){
   status.textContent='';
   status.className='reset-status';
 
+  if(!navigator.onLine){
+    status.textContent='Perangkat sedang offline.';
+    status.className='reset-status bad';
+    return;
+  }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
     status.textContent='Masukkan alamat email yang valid.';
     status.className='reset-status bad';
@@ -1227,29 +1534,23 @@ async function sendPasswordReset(){
   }
 
   btn.disabled=true;
-  btn.textContent='Mengirim...';
+  btn.textContent='Mengirim…';
 
   try{
     const {error}=await withTimeout(
       sb.auth.resetPasswordForEmail(email,{redirectTo:AWARESOUL_PRODUCTION_URL}),
-      20000,
+      30000,
       'Pengiriman link reset terlalu lama.'
     );
     if(error)throw error;
-    localStorage.setItem(LAST_EMAIL_KEY,email);
+
+    safeStorageSet(LAST_EMAIL_KEY,email);
     $('#authEmail').value=email;
-    status.textContent='Jika email tersebut terdaftar, link reset sudah dikirim. Cek inbox dan folder Spam/Promosi.';
+    status.textContent='Jika email terdaftar, link reset sudah dikirim. Cek Inbox, Spam, atau Promosi.';
     status.className='reset-status ok';
   }catch(err){
-    const msg=String(err?.message||err);
-    if(/rate limit|too many|429/i.test(msg)){
-      status.textContent='Permintaan terlalu sering. Tunggu beberapa menit lalu coba lagi.';
-      status.className='reset-status bad';
-    }else{
-      status.textContent='Pengiriman belum berhasil. Periksa koneksi internet lalu coba lagi.';
-      status.className='reset-status bad';
-      console.warn('Password reset request:',err);
-    }
+    status.textContent=friendlyAuthError(err?.message||String(err),'login');
+    status.className='reset-status bad';
   }finally{
     btn.disabled=false;
     btn.textContent='Kirim Link Reset';
@@ -1258,21 +1559,17 @@ async function sendPasswordReset(){
 
 function openNewPasswordModal(){
   passwordRecoveryMode=true;
-  document.body.classList.remove('auth-restoring');
-  document.body.classList.remove('app-authenticated');
-  $('#authScreen').classList.remove('hidden');
-  $('#appScreen').classList.add('hidden');
+  showAuthScreen();
   $('#recoveryStatus').textContent='';
   $('#recoveryStatus').className='reset-status';
   $('#newRecoveryPassword').value='';
   $('#confirmRecoveryPassword').value='';
   $('#newPasswordModal').classList.add('open');
-  setTimeout(()=>$('#newRecoveryPassword').focus(),100);
 }
 
 async function saveRecoveredPassword(){
-  const pass=$('#newRecoveryPassword').value;
-  const confirmPass=$('#confirmRecoveryPassword').value;
+  const pass=String($('#newRecoveryPassword').value||'');
+  const confirmPass=String($('#confirmRecoveryPassword').value||'');
   const status=$('#recoveryStatus');
   const btn=$('#saveNewPasswordBtn');
 
@@ -1291,34 +1588,36 @@ async function saveRecoveredPassword(){
   }
 
   btn.disabled=true;
-  btn.textContent='Menyimpan...';
+  btn.textContent='Menyimpan…';
 
   try{
     const {data,error}=await withTimeout(
       sb.auth.updateUser({password:pass}),
-      20000,
+      30000,
       'Penyimpanan password terlalu lama.'
     );
     if(error)throw error;
 
-    const recoveredEmail=String(data?.user?.email||localStorage.getItem(LAST_EMAIL_KEY)||'').trim().toLowerCase();
-    if(recoveredEmail)localStorage.setItem(LAST_EMAIL_KEY,recoveredEmail);
+    const recoveredEmail=String(data?.user?.email||safeStorageGet(LAST_EMAIL_KEY)||'').trim().toLowerCase();
+    if(recoveredEmail)safeStorageSet(LAST_EMAIL_KEY,recoveredEmail);
 
-    status.textContent='Password berhasil diperbarui. Kamu akan diarahkan ke halaman Masuk.';
+    status.textContent='Password berhasil diperbarui.';
     status.className='reset-status ok';
 
     await sb.auth.signOut().catch(()=>{});
     passwordRecoveryMode=false;
+
     try{history.replaceState({},document.title,location.pathname)}catch(e){}
 
     setTimeout(()=>{
       $('#newPasswordModal').classList.remove('open');
+      showAuthScreen();
       setAuthMode('login');
       if(recoveredEmail)$('#authEmail').value=recoveredEmail;
       $('#authPassword').value='';
-      $('#authError').innerHTML='<div class="auth-success">Password baru berhasil disimpan. Silakan masuk menggunakan password baru.</div>';
-      $('#authPassword').focus();
-    },650);
+      $('#authError').innerHTML='<div class="auth-state-note">Password baru berhasil disimpan. Silakan masuk dengan password baru.</div>';
+    },500);
+
   }catch(err){
     status.textContent=friendlyAuthError(err?.message||String(err),'login');
     status.className='reset-status bad';
@@ -1328,143 +1627,32 @@ async function saveRecoveredPassword(){
   }
 }
 
-function setAuthMode(mode){
-  authMode=mode;
-  const reg=mode==='register';
-  $('#registerFields').classList.toggle('hidden',!reg);
-  $('#loginTab').classList.toggle('active',!reg);
-  $('#registerTab').classList.toggle('active',reg);
-  $('#forgotPasswordRow').classList.toggle('hidden',reg);
-  $('#authPassword').setAttribute('autocomplete',reg?'new-password':'current-password');
-  $('#authEmail').setAttribute('autocomplete',reg?'email':'username');
-  if(!authRequestBusy)$('#authSubmit').textContent=reg?'Buat Akun':'Masuk';
-  if(!$('#authError').querySelector('.auth-success'))$('#authError').textContent='';
-}
-async function handleAuth(event){
-  if(event?.preventDefault)event.preventDefault();
-  if(authRequestBusy)return;
-
-  // Blur agar iOS menutup keyboard/password overlay sebelum request login.
-  try{document.activeElement?.blur()}catch(e){}
-
-  const email=String($('#authEmail').value||'').trim().toLowerCase();
-  const password=$('#authPassword').value;
-
-  $('#authError').textContent='';
-
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-    $('#authError').textContent='Masukkan alamat email yang valid.';
-    return;
-  }
-  if(!password){
-    $('#authError').textContent='Masukkan password terlebih dahulu.';
-    return;
-  }
-
-  setAuthBusy(true,authMode==='register'?'Membuat akun...':'Sedang masuk...');
-
-  try{
-    let res;
-
-    if(authMode==='register'){
-      if(!$('#regConsent')?.checked)throw new Error('Centang persetujuan terlebih dahulu.');
-      if($('#regName').value.trim().length<2)throw new Error('Nama panggilan minimal 2 karakter.');
-      if(password.length<8)throw new Error('Password minimal 8 karakter.');
-
-      res=await withTimeout(
-        api('registerAwareSoulUserApi',{
-          displayName:$('#regName').value.trim(),
-          ageGroup:$('#regAge').value,
-          email,password,consentAccepted:true
-        }),
-        25000,
-        'Pendaftaran terlalu lama. Periksa koneksi internet lalu coba lagi.'
-      );
-
-      if(!res.success)throw new Error(res.error||'Pendaftaran gagal.');
-
-      localStorage.setItem(LAST_EMAIL_KEY,email);
-
-      if(res.needsEmailConfirmation){
-        setAuthMode('login');
-        $('#authEmail').value=email;
-        $('#authPassword').value='';
-        $('#authError').innerHTML='<div class="auth-success">Akun berhasil dibuat. Cek email verifikasi, lalu kembali dan masuk.</div>';
-        return;
-      }
-    }else{
-      res=await withTimeout(
-        api('loginAwareSoulUserApi',{email,password}),
-        25000,
-        'Login terlalu lama. Periksa koneksi internet lalu coba lagi.'
-      );
-      if(!res.success)throw new Error(res.error||'Email atau password salah.');
-    }
-
-    localStorage.setItem(LAST_EMAIL_KEY,email);
-    profile=res.profile;
-
-    if(!profile){
-      throw new Error('Login berhasil, tetapi profil AwareSoul belum siap. Tutup halaman lalu buka lagi. Jika tetap terjadi, hubungi admin.');
-    }
-
-    await enterApp();
-  }catch(e){
-    $('#authError').textContent=friendlyAuthError(e?.message||String(e),authMode);
-  }finally{
-    setAuthBusy(false);
-  }
-}
-
-async function restore(){
-  if(passwordRecoveryMode){
-    document.body.classList.remove('auth-restoring');
-    return;
-  }
-  try{
-    const rememberedEmail=localStorage.getItem(LAST_EMAIL_KEY)||'';
-    if(rememberedEmail&&!$('#authEmail').value)$('#authEmail').value=rememberedEmail;
-
-    const {data:{session},error}=await withTimeout(
-      sb.auth.getSession(),
-      12000,
-      'Pemulihan sesi terlalu lama.'
-    );
-    if(error)throw error;
-    if(!session)return;
-
-    const res=await withTimeout(
-      api('verifyAwareSoulSessionApi'),
-      15000,
-      'Pemulihan profil terlalu lama.'
-    );
-    if(res.success&&res.profile){
-      profile=res.profile;
-      if(profile?.email)localStorage.setItem(LAST_EMAIL_KEY,profile.email);
-      await enterApp();
-    }
-  }catch(e){
-    console.warn('Restore session:',e);
-  }finally{
-    document.body.classList.remove('auth-restoring');
-  }
-}
 async function enterApp(){
-  document.body.classList.remove('auth-restoring');
-  document.body.classList.add('app-authenticated');
-  $('#authScreen').classList.add('hidden');$('#appScreen').classList.remove('hidden');
+  showAppScreen();
+
   window.scrollTo(0,0);
   $('#profileChip').textContent=profile?.participantCode||'AS';
   $('#hello').textContent='Halo, '+(profile?.displayName||'teman')+'.';
-  await Promise.all([loadDashboard(),loadCounselors()]);
+
+  // Login UI must not fail just because dashboard or HealMind is slow.
+  loadDashboard().catch(err=>{
+    console.warn('Dashboard load:',err);
+    toast('Dashboard belum berhasil dimuat. Coba lagi sebentar.');
+  });
+
+  loadCounselors().catch(err=>{
+    console.warn('Counselor load:',err);
+  });
 }
 function logoutLocal(){
-  token='';profile=null;dashboard=null;analyticsHistory=[];
-  document.body.classList.remove('app-authenticated');
-  $('#appScreen').classList.add('hidden');$('#authScreen').classList.remove('hidden');
+  token='';
+  profile=null;
+  dashboard=null;
+  analyticsHistory=[];
   $('#authPassword').value='';
-  const rememberedEmail=localStorage.getItem(LAST_EMAIL_KEY)||'';
-  if(rememberedEmail)$('#authEmail').value=rememberedEmail;
+  showAuthScreen();
+  const remembered=safeStorageGet(LAST_EMAIL_KEY);
+  if(remembered)$('#authEmail').value=remembered;
   window.scrollTo(0,0);
 }
 async function logout(){try{await api('logoutAwareSoulUserApi')}catch(e){}logoutLocal()}
@@ -1684,46 +1872,49 @@ async function loadHistory(){
   }catch(e){box.innerHTML='<div class="notice danger-note">'+esc(e.message||e)+'</div>'}
 }
 
-const AWARESOUL_COUNSELOR_CACHE = 'awaresoul_counselors_browser_v3';
+const AWARESOUL_COUNSELOR_CACHE='awaresoul_counselors_v66';
 
-function readAwareSoulCounselorCache(){
+function readCounselorCache(){
   try{
-    const raw=localStorage.getItem(AWARESOUL_COUNSELOR_CACHE);
-    if(!raw)return null;
-    const parsed=JSON.parse(raw);
+    const parsed=JSON.parse(localStorage.getItem(AWARESOUL_COUNSELOR_CACHE)||'null');
     return Array.isArray(parsed?.data)?parsed.data:null;
   }catch(e){return null}
 }
-function writeAwareSoulCounselorCache(data){
+
+function writeCounselorCache(data){
   try{
     localStorage.setItem(AWARESOUL_COUNSELOR_CACHE,JSON.stringify({
-      at:Date.now(),data:Array.isArray(data)?data:[]
+      at:Date.now(),
+      data:Array.isArray(data)?data:[]
     }));
   }catch(e){}
 }
 
 async function loadCounselors(){
-  const cached=readAwareSoulCounselorCache();
-  const hadCached=Array.isArray(cached)&&cached.length>0;
+  const cached=readCounselorCache();
+  const hasCache=Array.isArray(cached)&&cached.length>0;
 
-  if(hadCached){
+  if(hasCache){
     counselors=cached;
     renderCounselors();
   }
 
-  const refresh=publicCounselors().then(data=>{
+  try{
+    const data=await publicCounselors();
     const fresh=Array.isArray(data)?data:[];
-    if(fresh.length||!hadCached){
+    if(fresh.length || !hasCache){
       counselors=fresh;
-      writeAwareSoulCounselorCache(fresh);
+      writeCounselorCache(fresh);
       renderCounselors();
     }
-  }).catch(e=>{
-    if(!hadCached){counselors=[];renderCounselors(e.message||String(e))}
-    else console.warn('AwareSoul background counselor refresh failed:',e);
-  });
-
-  if(!hadCached)await refresh;
+  }catch(err){
+    if(!hasCache){
+      counselors=[];
+      renderCounselors(err?.message||String(err));
+    }else{
+      console.warn('Counselor background refresh:',err);
+    }
+  }
 }
 function initials(n){return String(n||'?').trim().split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase()}
 function renderCounselors(error){
@@ -1900,57 +2091,79 @@ window.addEventListener('resize',()=>{
   if(trendChart)trendChart.resize();
   if(analyticsTrendChart)analyticsTrendChart.resize();
 },{passive:true});
-let authTransitionBusy=false;
+let authFallbackTimer=null;
+
+function finishAuthBoot(){
+  authBootHandled=true;
+  if(authFallbackTimer){
+    clearTimeout(authFallbackTimer);
+    authFallbackTimer=null;
+  }
+}
 
 sb.auth.onAuthStateChange((event,session)=>{
+  // IMPORTANT: keep this callback synchronous.
   if(event==='PASSWORD_RECOVERY'){
+    finishAuthBoot();
     passwordRecoveryMode=true;
     setTimeout(openNewPasswordModal,0);
     return;
   }
 
-  if(event==='SIGNED_OUT'&&!session){
-    profile=null;
-    dashboard=null;
+  if(event==='INITIAL_SESSION'){
+    finishAuthBoot();
+    setTimeout(()=>{
+      if(passwordRecoveryMode)return;
+      if(session?.user)hydrateFromSession(session);
+      else showAuthScreen();
+    },0);
     return;
   }
 
-  if(
-    event==='SIGNED_IN' &&
-    session &&
-    !profile &&
-    !authTransitionBusy &&
-    document.body.classList.contains('auth-restoring') &&
-    !passwordRecoveryMode
-  ){
-    authTransitionBusy=true;
-    setTimeout(async()=>{
-      try{
-        const res=await withTimeout(
-          api('verifyAwareSoulSessionApi'),
-          15000,
-          'Pemulihan profil terlalu lama.'
-        );
-        if(res.success&&res.profile){
-          profile=res.profile;
-          await enterApp();
-        }
-      }catch(e){
-        console.warn('Auth state restore:',e);
-      }finally{
-        authTransitionBusy=false;
-        document.body.classList.remove('auth-restoring');
-      }
+  if(event==='SIGNED_OUT'){
+    setTimeout(()=>{
+      if(!passwordRecoveryMode)showAuthScreen();
     },0);
   }
 });
 
 refreshScore();
-if(passwordRecoveryMode){
-  document.body.classList.remove('auth-restoring');
-  setTimeout(openNewPasswordModal,400);
-}else{
-  restore();
-}
+
+// Fallback only if INITIAL_SESSION is unexpectedly not emitted.
+authFallbackTimer=setTimeout(async()=>{
+  if(authBootHandled || passwordRecoveryMode)return;
+
+  try{
+    const {data:{session},error}=await sb.auth.getSession();
+    if(error)throw error;
+    finishAuthBoot();
+
+    if(session?.user)await hydrateFromSession(session);
+    else showAuthScreen();
+  }catch(err){
+    console.warn('Auth boot fallback:',err);
+    finishAuthBoot();
+    showAuthScreen('Koneksi login belum siap. Periksa internet lalu muat ulang halaman.');
+  }
+},1800);
+
+// Absolute UI failsafe: never leave a participant behind an endless loader.
+setTimeout(()=>{
+  if(document.body.classList.contains('auth-restoring') && !authHydrating && !passwordRecoveryMode){
+    showAuthScreen();
+  }
+},10000);
+
+window.addEventListener('offline',()=>{
+  if(!document.body.classList.contains('app-authenticated')){
+    $('#authError').textContent='Perangkat sedang offline. Sambungkan internet untuk masuk.';
+  }
+});
+
+window.addEventListener('online',()=>{
+  if(!document.body.classList.contains('app-authenticated')){
+    if($('#authError').textContent.includes('offline'))$('#authError').textContent='';
+  }
+});
 </script>
 </body></html>
