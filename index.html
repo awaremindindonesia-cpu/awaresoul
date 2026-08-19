@@ -482,73 +482,161 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .minor-note{margin:-4px 0 14px;padding:10px 12px;border-radius:12px;background:var(--am-soft);color:#5f536c;font-size:10.5px;line-height:1.55}
 .auth-success{margin-bottom:12px;padding:11px 12px;border-radius:12px;background:var(--mint-soft);color:#386d65;font-size:11.5px;line-height:1.55}
 
-/* ===== SESSION RESTORE + MOBILE RANGE GUARD ===== */
-.session-loader{
-  position:fixed;inset:0;z-index:9999;display:none;place-items:center;padding:24px;
-  background:var(--bg,#f8f6fa)
+/* ===== V6.2 MOBILE SCROLL CONTAINMENT ===== */
+html{
+  overscroll-behavior:none;
+}
+body{
+  overscroll-behavior:none!important;
 }
 
-/* AUTH STATE MACHINE — auth and app can never be visible together */
-body[data-auth-state="loading"] .session-loader{display:grid!important}
-body[data-auth-state="loading"] #authScreen,
-body[data-auth-state="loading"] #appScreen{display:none!important}
-
-body[data-auth-state="out"] .session-loader{display:none!important}
-body[data-auth-state="out"] #authScreen{display:grid!important}
-body[data-auth-state="out"] #appScreen{display:none!important}
-
-body[data-auth-state="in"] .session-loader{display:none!important}
-body[data-auth-state="in"] #authScreen{display:none!important}
-body[data-auth-state="in"] #appScreen{display:grid!important}
-.session-loader-card{
-  width:min(320px,88vw);padding:24px;border:1px solid var(--line);border-radius:22px;
-  background:#fff;text-align:center;box-shadow:0 16px 42px rgba(36,28,47,.09)
-}
-.session-loader-mark{
-  width:52px;height:52px;margin:0 auto 12px;border-radius:16px;display:grid;place-items:center;
-  background:var(--am-soft);color:var(--am);font-size:25px;font-weight:800
-}
-.session-loader-card b{display:block;font-size:15px;margin-bottom:5px}
-.session-loader-card span{display:block;color:var(--muted);font-size:11.5px}
-
+/* Ketika aplikasi aktif di HP, body tidak lagi menjadi area scroll utama.
+   Hanya .main yang boleh scroll agar tidak ada page/area lain yang ikut tertarik. */
 @media(max-width:900px){
-  /* Mobile-safe slider:
-     native range interaction is disabled; JS changes it only after a deliberate
-     horizontal drag or tap on the track. Vertical gestures remain page scroll. */
-  .slider{touch-action:pan-y;overscroll-behavior:auto}
-  .slider input[type=range]{
-    pointer-events:none;
+  body.app-active{
+    height:100dvh!important;
+    min-height:100dvh!important;
+    overflow:hidden!important;
+    overscroll-behavior:none!important;
+    position:relative;
+  }
+
+  body.app-active #appScreen:not(.hidden){
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    grid-template-rows:1fr!important;
+    width:100%!important;
+    height:100dvh!important;
+    min-height:0!important;
+    max-height:100dvh!important;
+    overflow:hidden!important;
+  }
+
+  body.app-active #appScreen .sidebar{
+    display:none!important;
+  }
+
+  body.app-active #appScreen .main{
+    width:100%!important;
+    height:100dvh!important;
+    min-height:0!important;
+    max-height:100dvh!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    overscroll-behavior-y:contain!important;
+    -webkit-overflow-scrolling:touch;
+    scroll-behavior:auto;
+    padding:
+      calc(14px + env(safe-area-inset-top))
+      14px
+      calc(112px + env(safe-area-inset-bottom))!important;
+  }
+
+  body.app-active #appScreen .page{
+    width:100%!important;
+    max-width:100%!important;
+    min-height:0!important;
+    overflow-x:hidden!important;
+  }
+
+  /* Hindari rubber-band/background scroll ketika bottom sheet / SOS terbuka. */
+  .modal-wrap.open{
+    overscroll-behavior:none!important;
     touch-action:none;
+  }
+  .modal-wrap.open .modal,
+  .modal-wrap.open .modal-body,
+  .modal-wrap.open .resource-modal-body{
+    overscroll-behavior:contain!important;
+    touch-action:pan-y;
   }
 }
 
 
-/* ===== AUTH GATE: mobile app controls must never appear on login ===== */
-body:not(.app-authenticated) .mobile-bottom-nav,
-body:not(.app-authenticated) .mobile-sos-fab{
-  display:none!important;
+/* ===== AWARESOUL V6.4 — PASSWORD RECOVERY ===== */
+.auth-help-row{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:-4px;
+  margin-bottom:14px;
+}
+.auth-link{
+  appearance:none;
+  border:0;
+  background:transparent;
+  color:#6f46df;
+  font:inherit;
+  font-size:13px;
+  font-weight:700;
+  padding:2px 0;
+  cursor:pointer;
+}
+.auth-link:hover{text-decoration:underline}
+.auth-link.hidden{display:none!important}
+
+.auth-success{
+  background:#effaf5;
+  border:1px solid #c8ebdb;
+  color:#267257;
+  padding:11px 12px;
+  border-radius:12px;
+  line-height:1.5;
+  font-size:13px;
+}
+.auth-info{
+  background:#f4f1ff;
+  border:1px solid #ddd5fb;
+  color:#55427d;
+  padding:11px 12px;
+  border-radius:12px;
+  line-height:1.5;
+  font-size:13px;
 }
 
+.password-reset-modal .modal{
+  width:min(92vw,460px);
+}
+.password-reset-modal .modal-head{
+  padding-bottom:18px;
+}
+.password-reset-modal .modal-body{
+  padding:22px;
+}
+.password-reset-modal .reset-actions{
+  display:flex;
+  gap:10px;
+  margin-top:16px;
+}
+.password-reset-modal .reset-actions .btn{flex:1}
+.password-reset-modal .reset-note{
+  color:#6d6b7c;
+  font-size:12px;
+  line-height:1.55;
+  margin-top:8px;
+}
+.password-reset-modal .reset-status{
+  margin-top:12px;
+  min-height:20px;
+  font-size:13px;
+  line-height:1.45;
+}
+.password-reset-modal .reset-status.ok{color:#267257}
+.password-reset-modal .reset-status.bad{color:#b13d48}
 
-/* Final mobile auth hard gate */
-body[data-auth-state="loading"] .mobile-bottom-nav,
-body[data-auth-state="loading"] .mobile-sos-fab,
-body[data-auth-state="out"] .mobile-bottom-nav,
-body[data-auth-state="out"] .mobile-sos-fab{
-  display:none!important;
+@media(max-width:640px){
+  .password-reset-modal .modal{
+    width:100%;
+    max-width:none;
+    border-radius:22px 22px 0 0;
+  }
+  .password-reset-modal .reset-actions{
+    flex-direction:column-reverse;
+  }
 }
 
 </style>
 </head>
-<body data-auth-state="loading">
-
-<div class="session-loader" id="sessionLoader" aria-live="polite">
-  <div class="session-loader-card">
-    <div class="session-loader-mark">♡</div>
-    <b>Memuat AwareSoul</b>
-    <span>Memulihkan sesi kamu…</span>
-  </div>
-</div>
+<body>
 
 <section id="authScreen" class="auth">
   <div class="auth-brand">
@@ -575,15 +663,18 @@ body[data-auth-state="out"] .mobile-sos-fab{
         </label>
         <div class="minor-note hidden" id="minorNote">Untuk peserta usia 13–17 tahun, status persetujuan wali dicatat terpisah sesuai protokol penelitian.</div>
       </div>
-      <div class="field"><label>Email</label><input id="authEmail" name="email" type="email" inputmode="email" autocapitalize="none" autocomplete="email"></div>
-      <div class="field"><label>Password</label><input id="authPassword" name="password" type="password" autocomplete="current-password" placeholder="Minimal 8 karakter"></div>
+      <div class="field"><label>Email</label><input id="authEmail" type="email" autocomplete="email"></div>
+      <div class="field"><label>Password</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="Minimal 8 karakter"></div>
+      <div class="auth-help-row" id="forgotPasswordRow">
+        <button type="button" class="auth-link" id="forgotPasswordBtn">Lupa password?</button>
+      </div>
       <div class="error" id="authError"></div>
       <button class="btn primary wide" id="authSubmit">Masuk</button>
     </div>
   </div>
 </section>
 
-<section id="appScreen" class="app">
+<section id="appScreen" class="app hidden">
   <button class="sidebar-toggle" id="sidebarToggle" aria-label="Buka atau tutup sidebar">☰</button>
   <aside class="sidebar">
     <div class="logo"><div class="logo-mark">♡</div><div class="logo-copy"><strong>AwareSoul</strong><span>AwareMind Indonesia</span></div></div>
@@ -870,6 +961,52 @@ body[data-auth-state="out"] .mobile-sos-fab{
     <div class="resource-modal-body" id="resourceBody"></div>
   </div>
 </div>
+
+<div class="modal-wrap password-reset-modal" id="forgotPasswordModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Reset Password</h3>
+      <p style="margin:6px 0 0;opacity:.85">Kami akan mengirim tautan reset ke email AwareSoul kamu.</p>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Email</label>
+        <input id="resetEmail" type="email" autocomplete="email" placeholder="nama@email.com">
+      </div>
+      <div class="reset-note">Kalau email tersebut terdaftar, kamu akan menerima email reset. Cek juga folder Spam/Promosi.</div>
+      <div class="reset-status" id="resetRequestStatus"></div>
+      <div class="reset-actions">
+        <button type="button" class="btn soft" id="cancelResetRequest">Batal</button>
+        <button type="button" class="btn primary" id="sendResetBtn">Kirim Link Reset</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-wrap password-reset-modal" id="newPasswordModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Buat Password Baru</h3>
+      <p style="margin:6px 0 0;opacity:.85">Masukkan password baru untuk akun AwareSoul kamu.</p>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Password baru</label>
+        <input id="newRecoveryPassword" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter">
+      </div>
+      <div class="field">
+        <label>Ulangi password baru</label>
+        <input id="confirmRecoveryPassword" type="password" autocomplete="new-password" placeholder="Ketik ulang password">
+      </div>
+      <div class="reset-note">Gunakan minimal 8 karakter dan simpan password ini agar mudah masuk kembali.</div>
+      <div class="reset-status" id="recoveryStatus"></div>
+      <div class="reset-actions">
+        <button type="button" class="btn primary wide" id="saveNewPasswordBtn">Simpan Password Baru</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -881,6 +1018,7 @@ const SUPABASE_URL = 'https://hcxcvenlpnyvyyywmcvn.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_tex17xb4NFKy0EbrN8hgAw_8sW2ZbYQ';
 const API_URL = 'https://script.google.com/macros/s/AKfycbygao8NIG0fBhWaEEO6poM-Ry2lBQTQ634mWeY-DjyzbT9GBBoAJReoxia7rMfv4v4y/exec';
 const HEALMIND_URL = 'https://healmind-ivory.vercel.app/';
+const AWARESOUL_PRODUCTION_URL = 'https://awaresoul.vercel.app/';
 
 const sb = window.supabase.createClient(
   SUPABASE_URL,
@@ -895,7 +1033,6 @@ const sb = window.supabase.createClient(
 );
 
 let token = '';
-const LAST_EMAIL_KEY = 'awaresoul_last_email';
 let profile = null;
 let dashboard = null;
 let selectedMood = 'Sangat Baik';
@@ -906,22 +1043,11 @@ let analyticsTrendChart = null;
 let analyticsHistory = [];
 let lockedScrollY = 0;
 let authMode = 'login';
+let passwordRecoveryMode = /(?:type=recovery|type%3Drecovery)/i.test(location.hash + location.search);
+let passwordRecoveryEventSeen = false;
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
-
-function setAuthState(state){
-  if(!['loading','out','in'].includes(state))state='out';
-  document.body.dataset.authState=state;
-  document.body.classList.toggle('app-authenticated',state==='in');
-
-  // Extra hard guard for mobile/content:// viewers.
-  const auth=$('#authScreen'), app=$('#appScreen'), loader=$('#sessionLoader');
-  if(auth) auth.setAttribute('aria-hidden', state==='out' ? 'false' : 'true');
-  if(app) app.setAttribute('aria-hidden', state==='in' ? 'false' : 'true');
-  if(loader) loader.setAttribute('aria-hidden', state==='loading' ? 'false' : 'true');
-}
-
 
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
 function today(){return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Jakarta'})}
@@ -1006,14 +1132,17 @@ async function api(action,...args){
     if(action==='registerAwareSoulUserApi'){
       const payload=args[0]||{};
       const {data,error}=await sb.auth.signUp({
-        email:String(payload.email||'').trim(),
+        email:String(payload.email||'').trim().toLowerCase(),
         password:String(payload.password||''),
-        options:{data:{
-          display_name:String(payload.displayName||'').trim(),
-          age_group:String(payload.ageGroup||''),
-          consent_accepted:!!payload.consentAccepted,
-          consent_version:'AWA-SOUL-CONSENT-2026-01'
-        }}
+        options:{
+          emailRedirectTo:AWARESOUL_PRODUCTION_URL,
+          data:{
+            display_name:String(payload.displayName||'').trim(),
+            age_group:String(payload.ageGroup||''),
+            consent_accepted:!!payload.consentAccepted,
+            consent_version:'AWA-SOUL-CONSENT-2026-01'
+          }
+        }
       });
       if(error)throw error;
       if(!data.session){
@@ -1025,7 +1154,7 @@ async function api(action,...args){
     if(action==='loginAwareSoulUserApi'){
       const payload=args[0]||{};
       const {data,error}=await sb.auth.signInWithPassword({
-        email:String(payload.email||'').trim(),password:String(payload.password||'')
+        email:String(payload.email||'').trim().toLowerCase(),password:String(payload.password||'')
       });
       if(error)throw error;
       return {success:true,profile:await getProfileForUser(data.user)};
@@ -1084,24 +1213,188 @@ async function api(action,...args){
   }
 }
 
+
+const AWARESOUL_COUNSELOR_CACHE = 'awaresoul_counselors_browser_v2';
+function readAwareSoulCounselorCache(){
+  try{
+    const raw=localStorage.getItem(AWARESOUL_COUNSELOR_CACHE);
+    if(!raw)return null;
+    const parsed=JSON.parse(raw);
+    return Array.isArray(parsed?.data)?parsed.data:null;
+  }catch(e){return null}
+}
+function writeAwareSoulCounselorCache(data){
+  try{localStorage.setItem(AWARESOUL_COUNSELOR_CACHE,JSON.stringify({at:Date.now(),data:Array.isArray(data)?data:[]}))}catch(e){}
+}
 async function publicCounselors(){
   if(!API_URL || API_URL.includes('PASTE_GOOGLE')) throw new Error('API_URL belum diisi.');
   const res=await fetch(API_URL+'?action=getAllKonselorPublic',{cache:'no-store'});
   if(!res.ok) throw new Error('Daftar konselor gagal dimuat.');
   return await res.json();
 }
+
+function friendlyAuthError(message, mode='login'){
+  const raw=String(message||'');
+  const low=raw.toLowerCase();
+
+  if(low.includes('invalid login credentials') || low.includes('invalid_credentials')){
+    return 'Email atau password tidak cocok. Jika sebelumnya sudah pernah mendaftar, gunakan “Lupa password?” untuk membuat password baru.';
+  }
+  if(low.includes('user already registered') || low.includes('already registered') || low.includes('already been registered')){
+    return 'Email ini sudah terdaftar. Silakan pilih Masuk. Jika lupa password, gunakan “Lupa password?”.';
+  }
+  if(low.includes('email not confirmed')){
+    return 'Email belum terverifikasi. Cek inbox email atau hubungi admin AwareSoul.';
+  }
+  if(low.includes('rate limit') || low.includes('too many') || low.includes('429')){
+    return 'Terlalu banyak percobaan dalam waktu singkat. Tunggu sebentar lalu coba lagi.';
+  }
+  if(low.includes('network') || low.includes('fetch')){
+    return 'Koneksi ke server terganggu. Periksa internet lalu coba lagi.';
+  }
+  return raw || (mode==='register'?'Pendaftaran gagal.':'Login gagal.');
+}
+
+function openForgotPassword(){
+  const email=String($('#authEmail').value||'').trim().toLowerCase();
+  $('#resetEmail').value=email;
+  $('#resetRequestStatus').textContent='';
+  $('#resetRequestStatus').className='reset-status';
+  $('#forgotPasswordModal').classList.add('open');
+  setTimeout(()=>$('#resetEmail').focus(),80);
+}
+
+function closeForgotPassword(){
+  $('#forgotPasswordModal').classList.remove('open');
+}
+
+async function sendPasswordReset(){
+  const email=String($('#resetEmail').value||'').trim().toLowerCase();
+  const status=$('#resetRequestStatus');
+  const btn=$('#sendResetBtn');
+
+  status.textContent='';
+  status.className='reset-status';
+
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    status.textContent='Masukkan alamat email yang valid.';
+    status.className='reset-status bad';
+    return;
+  }
+
+  btn.disabled=true;
+  btn.textContent='Mengirim...';
+
+  try{
+    const {error}=await sb.auth.resetPasswordForEmail(email,{
+      redirectTo:AWARESOUL_PRODUCTION_URL
+    });
+    if(error)throw error;
+
+    status.textContent='Jika email tersebut terdaftar, link reset sudah dikirim. Silakan cek inbox dan folder Spam/Promosi.';
+    status.className='reset-status ok';
+    $('#authEmail').value=email;
+  }catch(err){
+    const msg=String(err?.message||err);
+    if(/rate limit|too many|429/i.test(msg)){
+      status.textContent='Permintaan terlalu sering. Tunggu beberapa menit lalu coba lagi.';
+      status.className='reset-status bad';
+    }else{
+      // Hindari mengungkap apakah email terdaftar atau tidak.
+      status.textContent='Jika email tersebut terdaftar, link reset akan dikirim. Cek inbox dan folder Spam/Promosi.';
+      status.className='reset-status ok';
+      console.warn('Password reset request:',err);
+    }
+  }finally{
+    btn.disabled=false;
+    btn.textContent='Kirim Link Reset';
+  }
+}
+
+function openNewPasswordModal(){
+  passwordRecoveryMode=true;
+  $('#authScreen').classList.remove('hidden');
+  $('#appScreen').classList.add('hidden');
+  document.body.classList.remove('app-active');
+  $('#recoveryStatus').textContent='';
+  $('#recoveryStatus').className='reset-status';
+  $('#newRecoveryPassword').value='';
+  $('#confirmRecoveryPassword').value='';
+  $('#newPasswordModal').classList.add('open');
+  setTimeout(()=>$('#newRecoveryPassword').focus(),100);
+}
+
+async function saveRecoveredPassword(){
+  const pass=$('#newRecoveryPassword').value;
+  const confirmPass=$('#confirmRecoveryPassword').value;
+  const status=$('#recoveryStatus');
+  const btn=$('#saveNewPasswordBtn');
+
+  status.textContent='';
+  status.className='reset-status';
+
+  if(pass.length<8){
+    status.textContent='Password baru minimal 8 karakter.';
+    status.className='reset-status bad';
+    return;
+  }
+  if(pass!==confirmPass){
+    status.textContent='Konfirmasi password belum sama.';
+    status.className='reset-status bad';
+    return;
+  }
+
+  btn.disabled=true;
+  btn.textContent='Menyimpan...';
+
+  try{
+    const {data,error}=await sb.auth.updateUser({password:pass});
+    if(error)throw error;
+
+    const recoveredEmail=String(data?.user?.email||$('#authEmail').value||'').trim().toLowerCase();
+
+    status.textContent='Password berhasil diperbarui. Kamu akan diarahkan ke halaman Masuk.';
+    status.className='reset-status ok';
+
+    await sb.auth.signOut().catch(()=>{});
+    passwordRecoveryMode=false;
+    passwordRecoveryEventSeen=false;
+
+    try{
+      history.replaceState({},document.title,location.pathname);
+    }catch(e){}
+
+    setTimeout(()=>{
+      $('#newPasswordModal').classList.remove('open');
+      setAuthMode('login');
+      if(recoveredEmail)$('#authEmail').value=recoveredEmail;
+      $('#authPassword').value='';
+      $('#authError').innerHTML='<div class="auth-success">Password baru berhasil disimpan. Silakan masuk menggunakan password baru.</div>';
+      $('#authPassword').focus();
+    },700);
+
+  }catch(err){
+    status.textContent=friendlyAuthError(err?.message||String(err),'login');
+    status.className='reset-status bad';
+  }finally{
+    btn.disabled=false;
+    btn.textContent='Simpan Password Baru';
+  }
+}
+
 function setAuthMode(mode){
   authMode=mode;
   const reg=mode==='register';
   $('#registerFields').classList.toggle('hidden',!reg);
   $('#loginTab').classList.toggle('active',!reg);
   $('#registerTab').classList.toggle('active',reg);
+  $('#forgotPasswordRow').classList.toggle('hidden',reg);
   $('#authSubmit').textContent=reg?'Buat Akun':'Masuk';
   $('#authPassword').setAttribute('autocomplete',reg?'new-password':'current-password');
   if(!$('#authError').querySelector('.auth-success'))$('#authError').textContent='';
 }
 async function handleAuth(){
-  const email=$('#authEmail').value.trim(),password=$('#authPassword').value;
+  const email=$('#authEmail').value.trim().toLowerCase(),password=$('#authPassword').value;
   $('#authError').textContent='';$('#authSubmit').disabled=true;
   try{
     let res;
@@ -1114,7 +1407,6 @@ async function handleAuth(){
       });
       if(!res.success)throw new Error(res.error||'Pendaftaran gagal.');
       if(res.needsEmailConfirmation){
-        localStorage.setItem(LAST_EMAIL_KEY,email);
         setAuthMode('login');
         $('#authEmail').value=email;
         $('#authError').innerHTML='<div class="auth-success">Akun berhasil dibuat. Cek email verifikasi, lalu kembali dan masuk.</div>';
@@ -1124,67 +1416,40 @@ async function handleAuth(){
       res=await api('loginAwareSoulUserApi',{email,password});
       if(!res.success)throw new Error(res.error||'Email atau password salah.');
     }
-    localStorage.setItem(LAST_EMAIL_KEY,email);
     profile=res.profile;await enterApp();
-  }catch(e){$('#authError').textContent=e.message||String(e)}
+  }catch(e){$('#authError').textContent=friendlyAuthError(e?.message||String(e),authMode)}
   finally{$('#authSubmit').disabled=false}
 }
 async function restore(){
-  setAuthState('loading');
-
+  if(passwordRecoveryMode)return;
   try{
-    const rememberedEmail=localStorage.getItem(LAST_EMAIL_KEY)||'';
-    if(rememberedEmail&&!$('#authEmail').value)$('#authEmail').value=rememberedEmail;
-
-    // getSession reads the persisted Supabase session first.
-    const {data:{session},error}=await sb.auth.getSession();
-    if(error)throw error;
-
-    if(!session?.user){
-      setAuthState('out');
-      return;
-    }
-
-    // Avoid a second auth network round-trip (getUser) during startup.
-    // We already have session.user; only fetch its RLS-protected profile.
-    profile=await getProfileForUser(session.user);
-
-    if(profile?.email)localStorage.setItem(LAST_EMAIL_KEY,profile.email);
-    await enterApp();
-  }catch(e){
-    console.warn('Restore session:',e);
-    profile=null;
-    dashboard=null;
-    setAuthState('out');
-  }
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session)return;
+    if(passwordRecoveryMode)return;
+    const res=await api('verifyAwareSoulSessionApi');
+    if(res.success&&!passwordRecoveryMode){profile=res.profile;await enterApp()}
+  }catch(e){console.warn('Restore session:',e)}
 }
 async function enterApp(){
-  setAuthState('in');
+  $('#authScreen').classList.add('hidden');
+  $('#appScreen').classList.remove('hidden');
+  document.body.classList.add('app-active');
   window.scrollTo(0,0);
-
+  const main=$('#appScreen .main');
+  if(main)main.scrollTo({top:0,left:0,behavior:'auto'});
   $('#profileChip').textContent=profile?.participantCode||'AS';
   $('#hello').textContent='Halo, '+(profile?.displayName||'teman')+'.';
-
-  // Do not block entry while secondary content loads.
-  loadDashboard().catch(e=>console.warn('Dashboard load:',e));
-  loadCounselors().catch(e=>console.warn('Counselor load:',e));
+  await Promise.all([loadDashboard(),loadCounselors()]);
 }
 function logoutLocal(){
-  token='';
-  profile=null;
-  dashboard=null;
-  analyticsHistory=[];
-  setAuthState('out');
-
-  $('#authPassword').value='';
-  const rememberedEmail=localStorage.getItem(LAST_EMAIL_KEY)||'';
-  if(rememberedEmail)$('#authEmail').value=rememberedEmail;
-
+  token='';profile=null;dashboard=null;analyticsHistory=[];
+  document.body.classList.remove('app-active');
+  $('#appScreen').classList.add('hidden');
+  $('#authScreen').classList.remove('hidden');
   window.scrollTo(0,0);
 }
 async function logout(){try{await api('logoutAwareSoulUserApi')}catch(e){}logoutLocal()}
 function jump(page){
-  if(!profile || document.body.dataset.authState!=='in') return;
   const target=$('#page-'+page);
   if(!target)return;
 
@@ -1212,7 +1477,11 @@ function jump(page){
   if(page==='analytics') loadAnalytics();
   if(page==='counselors') renderCounselors();
 
-  requestAnimationFrame(()=>window.scrollTo({top:0,left:0,behavior:'auto'}));
+  requestAnimationFrame(()=>{
+    const main=$('#appScreen .main');
+    if(window.innerWidth<=900 && main) main.scrollTo({top:0,left:0,behavior:'auto'});
+    else window.scrollTo({top:0,left:0,behavior:'auto'});
+  });
 }
 function toggleSidebar(){
   const app=$('#appScreen');
@@ -1228,10 +1497,6 @@ function scoreNow(){
 }
 function refreshScore(){[['energy','vEnergy'],['calm','vCalm'],['social','vSocial'],['stress','vStress']].forEach(([a,b])=>$('#'+b).textContent=$('#'+a).value);const sc=scoreNow();$('#liveScore').textContent=sc;$('#scoreRing').style.setProperty('--score',sc)}
 async function saveCheckin(){
-  if(!profile || document.body.dataset.authState!=='in'){
-    toast('Silakan masuk terlebih dahulu.');
-    return;
-  }
   const payload={date:today(),mood:selectedMood,energyPositive:+$('#energy').value,emotionalCalm:+$('#calm').value,socialConnection:+$('#social').value,stressTension:+$('#stress').value,tags:selectedTags,diary:$('#diary').value.trim(),gratitude1:$('#g1').value.trim(),gratitude2:$('#g2').value.trim(),gratitude3:$('#g3').value.trim()};
   $('#saveCheckin').disabled=true;
   try{
@@ -1399,7 +1664,28 @@ async function loadHistory(){
   }catch(e){box.innerHTML='<div class="notice danger-note">'+esc(e.message||e)+'</div>'}
 }
 async function loadCounselors(){
-  try{counselors=await publicCounselors();renderCounselors()}catch(e){counselors=[];renderCounselors(e.message||String(e))}
+  const cached=readAwareSoulCounselorCache();
+  const hadCached=Array.isArray(cached)&&cached.length>0;
+
+  if(hadCached){
+    counselors=cached;
+    renderCounselors();
+  }
+
+  const refresh=publicCounselors().then(data=>{
+    const fresh=Array.isArray(data)?data:[];
+    if(fresh.length||!hadCached){
+      counselors=fresh;
+      writeAwareSoulCounselorCache(fresh);
+      renderCounselors();
+    }
+  }).catch(e=>{
+    if(!hadCached){counselors=[];renderCounselors(e.message||String(e))}
+    else console.warn('AwareSoul background counselor refresh failed:',e);
+  });
+
+  // Kalau data browser sudah ada, jangan blok proses masuk aplikasi.
+  if(!hadCached) await refresh;
 }
 function initials(n){return String(n||'?').trim().split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase()}
 function renderCounselors(error){
@@ -1424,21 +1710,40 @@ function goSosStage(n){
     $('#sosP'+i).classList.toggle('active',i<=n);
   });
 }
+let lockedMainScrollY=0;
 function lockPageScroll(){
   if(document.body.classList.contains('scroll-locked'))return;
-  lockedScrollY=window.scrollY||0;
-  document.body.style.top=`-${lockedScrollY}px`;
+  const main=$('#appScreen .main');
+
+  if(window.innerWidth<=900 && document.body.classList.contains('app-active') && main){
+    lockedMainScrollY=main.scrollTop||0;
+    main.dataset.lockedOverflow=main.style.overflowY||'';
+    main.style.overflowY='hidden';
+  }else{
+    lockedScrollY=window.scrollY||0;
+    document.body.style.top=`-${lockedScrollY}px`;
+  }
+
   document.body.classList.add('scroll-locked');
 }
 function unlockPageScroll(){
   if(!document.body.classList.contains('scroll-locked'))return;
+  const main=$('#appScreen .main');
+
   document.body.classList.remove('scroll-locked');
-  document.body.style.top='';
-  window.scrollTo(0,lockedScrollY);
+
+  if(window.innerWidth<=900 && document.body.classList.contains('app-active') && main){
+    main.style.overflowY=main.dataset.lockedOverflow||'auto';
+    delete main.dataset.lockedOverflow;
+    main.scrollTop=lockedMainScrollY;
+  }else{
+    document.body.style.top='';
+    window.scrollTo(0,lockedScrollY);
+  }
 }
-function openSos(){if(!profile||document.body.dataset.authState!=='in')return;goSosStage(1);$('#sosModal').classList.add('open');lockPageScroll()}
+function openSos(){goSosStage(1);$('#sosModal').classList.add('open');lockPageScroll()}
 function closeSos(){$('#sosModal').classList.remove('open');unlockPageScroll()}
-function openMore(){if(!profile||document.body.dataset.authState!=='in')return;$('#mobileMoreModal').classList.add('open');lockPageScroll()}
+function openMore(){$('#mobileMoreModal').classList.add('open');lockPageScroll()}
 function closeMore(){$('#mobileMoreModal').classList.remove('open');unlockPageScroll()}
 function openResource(type){
   const title=$('#resourceTitle'),sub=$('#resourceSub'),body=$('#resourceBody');
@@ -1454,96 +1759,16 @@ function openResource(type){
   $('#resourceModal').classList.add('open');lockPageScroll();
 }
 function closeResource(){$('#resourceModal').classList.remove('open');unlockPageScroll()}
-
-function installMobileRangeGuard(){
-  if(window.innerWidth>900)return;
-
-  ['energy','calm','social','stress'].forEach(id=>{
-    const input=$('#'+id);
-    if(!input)return;
-    const wrap=input.closest('.slider');
-    if(!wrap)return;
-
-    let gesture=null;
-
-    const setFromX=x=>{
-      const rect=input.getBoundingClientRect();
-      const min=Number(input.min||0),max=Number(input.max||100);
-      const ratio=Math.max(0,Math.min(1,(x-rect.left)/Math.max(rect.width,1)));
-      input.value=String(Math.round(min+(max-min)*ratio));
-      refreshScore();
-    };
-
-    wrap.addEventListener('pointerdown',e=>{
-      // Only begin slider intent when the pointer starts around the actual track.
-      const rect=input.getBoundingClientRect();
-      const hitTrack=e.clientY>=rect.top-14 && e.clientY<=rect.bottom+14 &&
-                     e.clientX>=rect.left-8 && e.clientX<=rect.right+8;
-      if(!hitTrack)return;
-
-      gesture={
-        id:e.pointerId,
-        startX:e.clientX,
-        startY:e.clientY,
-        lastX:e.clientX,
-        horizontal:false,
-        vertical:false,
-        moved:false
-      };
-    },{passive:true});
-
-    wrap.addEventListener('pointermove',e=>{
-      if(!gesture||e.pointerId!==gesture.id)return;
-      const dx=e.clientX-gesture.startX;
-      const dy=e.clientY-gesture.startY;
-      const ax=Math.abs(dx),ay=Math.abs(dy);
-      gesture.lastX=e.clientX;
-
-      if(ax>4||ay>4)gesture.moved=true;
-
-      if(!gesture.horizontal&&!gesture.vertical){
-        // A clear vertical gesture belongs to page scrolling and NEVER changes the value.
-        if(ay>=8 && ay>ax+2){
-          gesture.vertical=true;
-          return;
-        }
-        // Value changes only after horizontal intent is clear.
-        if(ax>=8 && ax>ay+2){
-          gesture.horizontal=true;
-          try{wrap.setPointerCapture(e.pointerId)}catch(_){}
-        }
-      }
-
-      if(gesture.horizontal){
-        setFromX(e.clientX);
-      }
-    },{passive:true});
-
-    const finish=e=>{
-      if(!gesture)return;
-      if(e?.pointerId!=null&&e.pointerId!==gesture.id)return;
-
-      // A deliberate tap on the track changes the value.
-      // A vertical swipe does absolutely nothing to the slider.
-      if(!gesture.vertical && !gesture.horizontal && !gesture.moved){
-        setFromX(e.clientX);
-      }else if(gesture.horizontal){
-        setFromX(gesture.lastX);
-      }
-
-      try{wrap.releasePointerCapture(gesture.id)}catch(_){}
-      gesture=null;
-    };
-
-    wrap.addEventListener('pointerup',finish,{passive:true});
-    wrap.addEventListener('pointercancel',()=>{gesture=null},{passive:true});
-  });
-}
 $('#sidebarToggle').onclick=toggleSidebar;
 $('#resourceModal').addEventListener('click',e=>{if(e.target.id==='resourceModal')closeResource()});
 $('#mobileMoreModal').addEventListener('click',e=>{if(e.target.id==='mobileMoreModal')closeMore()});
 $('#sosModal').addEventListener('click',e=>{if(e.target.id==='sosModal')closeSos()});
 $('#loginTab').onclick=()=>setAuthMode('login');$('#registerTab').onclick=()=>setAuthMode('register');$('#authSubmit').onclick=handleAuth;
+$('#forgotPasswordBtn').onclick=openForgotPassword;
+$('#cancelResetRequest').onclick=closeForgotPassword;
+$('#sendResetBtn').onclick=sendPasswordReset;
+$('#saveNewPasswordBtn').onclick=saveRecoveredPassword;
+$('#forgotPasswordModal').addEventListener('click',e=>{if(e.target.id==='forgotPasswordModal')closeForgotPassword()});
 $('#regAge').addEventListener('change',()=>{
   $('#minorNote').classList.toggle('hidden',$('#regAge').value!=='13–17 tahun');
 });
@@ -1557,7 +1782,7 @@ $('#mobileSosBtn').onclick=openSos;$$('[data-jump]').forEach(b=>b.onclick=()=>ju
 $('#logoutBtn').onclick=logout;$('#sosNav').onclick=openSos;$('#heroSos').onclick=openSos;$('#closeSos').onclick=closeSos;$('#sosCounselor').onclick=()=>{closeSos();jump('counselors')};$('#heroCounselor').onclick=()=>jump('counselors');
 $$('.mood').forEach(b=>b.onclick=()=>{$$('.mood').forEach(x=>x.classList.remove('active'));b.classList.add('active');selectedMood=b.dataset.value});
 $$('.chip').forEach(b=>b.onclick=()=>{b.classList.toggle('active');selectedTags=$$('.chip.active').map(x=>x.textContent.trim())});
-['energy','calm','social','stress'].forEach(id=>$('#'+id).addEventListener('input',refreshScore));installMobileRangeGuard();$('#saveCheckin').onclick=saveCheckin;
+['energy','calm','social','stress'].forEach(id=>$('#'+id).oninput=refreshScore);$('#saveCheckin').onclick=saveCheckin;
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     if($('#sosModal').classList.contains('open'))closeSos();
@@ -1569,13 +1794,27 @@ window.addEventListener('resize',()=>{
   if(trendChart)trendChart.resize();
   if(analyticsTrendChart)analyticsTrendChart.resize();
 },{passive:true});
-// Keep runtime logout synchronized with Supabase.
-// Initial session restoration is handled only by restore() to avoid UI races.
+document.body.classList.remove('app-active');
+
 sb.auth.onAuthStateChange((event,session)=>{
-  if(event==='SIGNED_OUT'&&!session && document.body.dataset.authState==='in'){
-    logoutLocal();
+  if(event==='PASSWORD_RECOVERY'){
+    passwordRecoveryMode=true;
+    passwordRecoveryEventSeen=true;
+    setTimeout(openNewPasswordModal,0);
+    return;
+  }
+  if(event==='SIGNED_OUT'&&!session){
+    profile=null;
+    dashboard=null;
   }
 });
-refreshScore();restore();
+
+// Beri Supabase sedikit waktu memproses callback recovery sebelum restore session normal.
+refreshScore();
+if(passwordRecoveryMode){
+  setTimeout(openNewPasswordModal,350);
+}else{
+  setTimeout(()=>{if(!passwordRecoveryMode)restore()},300);
+}
 </script>
 </body></html>
